@@ -4,8 +4,30 @@ using System.Collections.Generic;
 
 namespace TestFormulaEvaluator
 {
+    /*
+     * I Used this project for notes in discussion section.  I have not used the project for testing
+     * Tests are located in UnitTestEvaluator
+     * */
+
+
+
     //makes proxy spreadsheet object for testing
     //its basically a wrapper method around a dictionary
+   
+    
+    
+    /*For Future Reference Regex Expressions:
+
+        '^' means beginning of string
+        string pattern = "^[a-zA-Z]+[0-9]+$";
+        one or more letters followed by one ore more digits
+        dont put any space
+        string x = "a1";
+
+        //Regex.IsMatch(x, pattern);
+        */
+
+
     public class FakeSpreadsheet
     {
         private Dictionary<string, int> cells = new Dictionary<string, int>();
@@ -29,20 +51,20 @@ namespace TestFormulaEvaluator
         public static int NoVarsLookup(string s)
         {
             Console.WriteLine("lookup was invoked");
-            
-            throw new ArgumentException("unkown variable");
+            return 1;
+            //throw new ArgumentException("unkown variable");
         }
 
         public static int BasicLookup(string s)
         {
             if (s == "a4")
-                return 9;
+                return 1;
             throw new ArgumentException("unkown variable");
         }
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-            Console.WriteLine(Evaluator.Evaluate("5-3+a4", NoVarsLookup));
+           // Console.WriteLine(Evaluator.Evaluate("5-3+a4", NoVarsLookup));
             //Do I add FormulaEvaluator as a project reference?
 
             try
@@ -57,14 +79,14 @@ namespace TestFormulaEvaluator
             }
 
             //how it will eventually all fit together
-           // Spreadsheet s = ;
+            // Spreadsheet s = ;
             //Evaluator.Evaluate("...", s.GetCellValue);
 
-            FakeSpreadsheet fake = new FakeSpreadsheet();
-            fake.AddCell("a3", 4);
+            //FakeSpreadsheet fake = new FakeSpreadsheet();
+            //fake.AddCell("a3", 4);
 
-            FakeSpreadsheet empty = new FakeSpreashet();
-            Evaluator.Evaluate("5-a4", empty.GetCell);
+            //FakeSpreadsheet empty = new FakeSpreadsheet();
+           // Evaluator.Evaluate("5-a4", empty.GetCell);
 
             
             Console.Read();

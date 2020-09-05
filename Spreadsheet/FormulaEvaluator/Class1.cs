@@ -31,8 +31,7 @@ namespace FormulaEvaluator
             for (int i = 0; i < substrings.Length; i++)
             {
                 string token = substrings[i];
-                
-                
+              
                 if(token.Equals("")) //ignore empty strings
                 {
                     continue;
@@ -104,7 +103,7 @@ namespace FormulaEvaluator
                 if (token.Equals("(")) //if  token is a '(' left parenthesis
                 {
                     //push token onto operator stack
-                    char parenthesis = char.Parse(token);
+                    char parenthesis = '(';
                     operatorsStack.Push(parenthesis);
                 }
                 
@@ -117,10 +116,7 @@ namespace FormulaEvaluator
                         //push the result onto the popped numbers
                         PopPopPopEvalPush(operatorsStack, valuesStack);
                         //next in the operator stack should be '('. Pop it.
-                        if (operatorsStack.Pop().Equals('('))
-                        {
-                            throw new ArgumentException("Syntax error");
-                        }
+                        
                     }
                     if (operatorsStack.IsOnTop('+') || operatorsStack.IsOnTop('-')) //if * or / is on top of the operator stack
                     {
@@ -128,6 +124,10 @@ namespace FormulaEvaluator
                         //apply the popped operator to the popped numbers
                         //push the value on to the the value stack
                         PopPopPopEvalPush(operatorsStack, valuesStack);
+                        if (!operatorsStack.Pop().Equals('('))
+                        {
+                            throw new ArgumentException("Syntax error");
+                        }
                     }
                 }
 
@@ -147,31 +147,6 @@ namespace FormulaEvaluator
                      PopPopPopEvalPush(operatorsStack, valuesStack);
                      return valuesStack.Pop();
                 }
-
-            //Regex Expressions
-
-            //'^' means beginning of string
-            string pattern = "^[a-zA-Z]+[0-9]+$";
-                 //one or more letters followed by one ore more digits
-                 //dont m=put space
-            string x = "a1";
-
-            Regex.IsMatch(x, pattern);
-
-
-
-            if (operatorsStack.Count > 0 && operatorsStack.Peek().Equals("("))
-               {
-                 //do bla bla bla
-               }
-            //put tokens into stack
-
-
-            //TODO... should evaluate the expression using algorithm and return
-            //either value or ArgumentException
-
-
-            
         }
 
 
