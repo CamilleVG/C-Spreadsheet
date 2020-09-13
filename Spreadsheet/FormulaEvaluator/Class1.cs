@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -49,7 +50,7 @@ namespace FormulaEvaluator
                 bool isInteger = int.TryParse(token, out t);  //determines if token is an integer
                 if (!(token.Equals("(")|| token.Equals(")") || token.Equals("*") || token.Equals("/") || token.Equals("+") || token.Equals("-") || isInteger || IsVar(token)))//if token does not equals (,),+,-,*,/, non-negative integer, or variable 
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException("Error: Unexpected symbol");
                 }
 
                 if (isInteger) //if token is a integer
@@ -60,6 +61,10 @@ namespace FormulaEvaluator
                         //pop the value stack and operator stack and apply the operator to the token and popped number
 
                         char op = operatorsStack.Pop();
+                        if (valuesStack.Count == 0)
+                        {
+                            throw new ArgumentException("Syntax Error: No more values to apply operator");
+                        }
                         int firstVal = valuesStack.Pop();
                         int result;
                         if (op == '*')
@@ -68,6 +73,10 @@ namespace FormulaEvaluator
                         }
                         else // if (op == '/')
                         {
+                            if (intToken == 0)
+                            {
+                                throw new ArgumentException("Error: Divsion by 0");
+                            }
                             result = firstVal / intToken;
                         }
 
@@ -77,6 +86,7 @@ namespace FormulaEvaluator
                     {
                         valuesStack.Push(intToken);
                     }
+                    
                 }
 
 

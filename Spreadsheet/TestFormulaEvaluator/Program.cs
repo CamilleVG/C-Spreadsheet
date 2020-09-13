@@ -9,7 +9,7 @@ namespace TestFormulaEvaluator
      * Tests are located in UnitTestEvaluator
      * */
 
-
+    
 
     //makes proxy spreadsheet object for testing
     //its basically a wrapper method around a dictionary
