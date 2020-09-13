@@ -4,10 +4,7 @@
 //               (Clarified meaning of dependent and dependee.)
 //               (Clarified names in solution/project structure.)
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace SpreadsheetUtilities
 {
@@ -43,6 +40,7 @@ namespace SpreadsheetUtilities
     {
         Dictionary<string, HashSet<string>> dependents;
         Dictionary<string, HashSet<string>> dependees;
+        int size;
 
 
         /// <summary>
@@ -52,6 +50,7 @@ namespace SpreadsheetUtilities
         {
             dependents = new Dictionary<string, HashSet<string>>(); //maps to a set of strings(nodes)
             dependees = new Dictionary<string, HashSet<string>>();
+            size = 0; // number of ordered pairss
 
         }
 
@@ -61,7 +60,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public int Size
         {
-            get { return dependents.Count; }
+            get { return size; }
         }
 
 
@@ -127,15 +126,10 @@ namespace SpreadsheetUtilities
         {
             if (dependents.ContainsKey(s) && dependees.ContainsKey(s) && dependents.ContainsKey(t) && dependees.ContainsKey(t)) {  //if both nodes already exist
 
-                if (dependents[s].Contains(t))  //if t dependss on it, than the dependency already exisits
-                {
-                    throw new ArgumentException("Dependency already exists.");
-                }
-                else
+                if (!dependents[s].Contains(t))  //if t dependss on it, than the dependency already exisits
                 {
                     dependents[s].Add(t);
                     dependees[t].Add(s);
-
                 }
             }
             //if node s already exists, but node t does not
@@ -175,6 +169,8 @@ namespace SpreadsheetUtilities
                 tdependees.Add(s);
                 dependees.Add(t, tdependees);
             }
+            size++;
+
         }
 
 
@@ -187,6 +183,7 @@ namespace SpreadsheetUtilities
         {
             dependents[s].Remove(t);
             dependees[t].Remove(s);
+            size--;
         }
 
 
@@ -198,13 +195,26 @@ namespace SpreadsheetUtilities
         {
             foreach (string t in dependents[s])
             {
-                dependees[t].Remove(s);
+                dependees[t].Remove(s);  //remove s from being its dependee
 
             }
             dependents[s].Clear();
             foreach (string d in newDependents)
             {
-                dependents[s].Add(d);
+                if (dependees.ContainsKey(d))
+                {
+                    dependees[d].Add(s);
+                    dependents[s].Add(d);
+                }
+                else
+                {
+                    dependents[s].Add(d);
+                    HashSet<string> ddependees = new HashSet<string>();
+                    ddependees.Add(s);
+                    dependees.Add(d, ddependees);
+                    HashSet<string> ddependents = new HashSet<string>();
+                    dependents.Add(d, ddependents);
+                }
 
             }
         }
@@ -223,7 +233,20 @@ namespace SpreadsheetUtilities
             dependees[s].Clear();
             foreach( string d in newDependees)
             {
-                dependees[s].Add(d);
+                if (dependees.ContainsKey(d))
+                {
+                    dependees[s].Add(d);
+                    dependents[d].Add(s);
+                }
+                else
+                {
+                    HashSet<string> ddependees = new HashSet<string>();
+                    dependees.Add(d, ddependees);
+                    HashSet<string> ddependents = new HashSet<string>();
+                    ddependents.Add(s);
+                    dependents.Add(d, ddependents);
+                    dependees[s].Add(d);
+                }
             }
         }
 
