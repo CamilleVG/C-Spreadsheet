@@ -3,6 +3,7 @@
 // Version 1.2 - Daniel Kopta 
 //               (Clarified meaning of dependent and dependee.)
 //               (Clarified names in solution/project structure.)
+// Completed by @author Camille van Ginkel
 
 using System.Collections.Generic;
 
@@ -38,9 +39,9 @@ namespace SpreadsheetUtilities
     /// </summary>
     public class DependencyGraph
     {
-        Dictionary<string, HashSet<string>> dependents;
-        Dictionary<string, HashSet<string>> dependees;
-        int size;
+        Dictionary<string, HashSet<string>> dependents;  //Maps each node as a key to its set of dependents
+        Dictionary<string, HashSet<string>> dependees;   //Maps each node as a key to its set of dependees
+        int size;  //tracks the number of dependency's added to this object
 
 
         /// <summary>
@@ -48,7 +49,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public DependencyGraph()
         {
-            dependents = new Dictionary<string, HashSet<string>>(); //maps to a set of strings(nodes)
+            dependents = new Dictionary<string, HashSet<string>>();
             dependees = new Dictionary<string, HashSet<string>>();
             size = 0; // number of ordered pairss
 
@@ -155,7 +156,7 @@ namespace SpreadsheetUtilities
                 sdependents.Add(t);
                 dependents.Add(s, sdependents);
             }
-            //if niether node s or node t exist
+            //if niether node s nor node t already exist
             else //if (!dependents.ContainsKey(s) && !dependees.ContainsKey(s) && !dependents.ContainsKey(t) && !dependees.ContainsKey(t))
             {
 
@@ -213,7 +214,7 @@ namespace SpreadsheetUtilities
 
             }
             dependents[s].Clear(); 
-            foreach (string d in newDependents)  //add each node to 
+            foreach (string d in newDependents)  //add each node to the node s dependent set
             {
                 if (dependees.ContainsKey(d))
                 {
