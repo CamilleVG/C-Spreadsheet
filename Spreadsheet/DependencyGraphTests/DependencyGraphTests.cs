@@ -260,6 +260,95 @@ namespace DevelopmentTests
                 Assert.IsTrue(dees[i].SetEquals(new HashSet<string>(t.GetDependees(letters[i]))));
             }
         }
+        /// <summary>
+        ///Tests the this[string s] method returns the size of dependees of "a"
+        ///</summary>
+        [TestMethod()]
+        public void DependeesSizeTest()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "a");
+            Assert.AreEqual(1, t["a"]);
+            t.AddDependency("b", "a");
+            t.AddDependency("c", "a");
+            Assert.AreEqual(3, t["a"]);
+        }
+        /// <summary>
+        ///Tests whether HasDependees( string s) returns correct boolean
+        ///</summary>
+        [TestMethod()]
+        public void HasDependeesTest()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("b", "c");
+            Assert.IsFalse(t.HasDependees("b"));
+            t.AddDependency("a", "b");
+            Assert.IsTrue(t.HasDependees("b"));
+            t.AddDependency("d", "d");
+            Assert.IsTrue(t.HasDependees("c"));
+        }
+
+        /// <summary>
+        ///Tests whether HasDependents( string s) returns correct boolean
+        ///</summary>
+        [TestMethod()]
+        public void HasDependentsTest()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("b", "c");
+            Assert.IsFalse(t.HasDependents("c"));
+            Assert.IsTrue(t.HasDependents("b"));
+            t.AddDependency("c", "d");
+            Assert.IsTrue(t.HasDependees("c"));
+            Assert.IsFalse(t.HasDependents("d"));
+            t.AddDependency("d", "d");
+            Assert.IsTrue(t.HasDependents("d"));
+        }
+
+        /// <summary>
+        ///Tests whether replace dependents work --including when it replaces pairs with nodes that already exist
+        ///</summary>
+        [TestMethod()]
+        public void ReplaceDependentsTest()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "b");
+            t.AddDependency("a", "c");
+            t.AddDependency("a", "d");
+            t.AddDependency("g", "f");
+            t.AddDependency("m", "n");
+            HashSet<string> newDependents = new HashSet<string>();
+            newDependents.Add("m");
+            newDependents.Add("f");
+            newDependents.Add("z");
+            newDependents.Add("b");
+            t.ReplaceDependents("a", newDependents);
+            Assert.IsTrue(newDependents.SetEquals( t.GetDependents("a")));
+        }
+
+        /// <summary>
+        ///Tests whether replace dependents work --including when the new set adds new nodes
+        ///</summary>
+        [TestMethod()]
+        public void ReplaceDependeesTest()
+        {
+            DependencyGraph t = new DependencyGraph();
+            t.AddDependency("a", "b");
+            t.AddDependency("c", "b");
+            t.AddDependency("d", "b");
+            t.AddDependency("g", "f");
+            t.AddDependency("m", "n");
+            HashSet<string> newDependees = new HashSet<string>();
+            newDependees.Add("m");
+            newDependees.Add("f");
+            newDependees.Add("z");
+            newDependees.Add("n");
+            newDependees.Add("p");
+            t.ReplaceDependees("a", newDependees);
+            Assert.IsTrue(newDependees.SetEquals(t.GetDependees("a")));
+        }
+
+
 
     }
 }

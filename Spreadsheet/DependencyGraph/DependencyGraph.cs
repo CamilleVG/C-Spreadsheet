@@ -82,7 +82,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependents(string s)
         {
-            return dependents[s].Count == 0;
+            return dependents[s].Count > 0;
         }
 
 
@@ -91,7 +91,7 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependees(string s)
         {
-            return dependees[s].Count == 0;
+            return dependees[s].Count > 0;
         }
 
 
@@ -156,18 +156,32 @@ namespace SpreadsheetUtilities
                 dependents.Add(s, sdependents);
             }
             //if niether node s or node t exist
-            else if (!dependents.ContainsKey(s) && !dependees.ContainsKey(s) && !dependents.ContainsKey(t) && !dependees.ContainsKey(t))
+            else //if (!dependents.ContainsKey(s) && !dependees.ContainsKey(s) && !dependents.ContainsKey(t) && !dependees.ContainsKey(t))
             {
-                HashSet<string> sdependents = new HashSet<string>();
-                sdependents.Add(t);
-                dependents.Add(s, sdependents);
-                HashSet<string> sdependees = new HashSet<string>();
-                dependees.Add(s, sdependees);
-                HashSet<string> tdependents = new HashSet<string>();
-                dependents.Add(t, tdependents);
-                HashSet<string> tdependees = new HashSet<string>();
-                tdependees.Add(s);
-                dependees.Add(t, tdependees);
+
+                if (s.Equals(t))  
+                {
+                    HashSet<string> sdependents = new HashSet<string>();
+                    sdependents.Add(t);
+                    dependents.Add(s, sdependents);
+                    HashSet<string> sdependees = new HashSet<string>();
+                    sdependees.Add(t);
+                    dependees.Add(s, sdependees);
+                }
+                else
+                {
+                    HashSet<string> sdependents = new HashSet<string>();
+                    sdependents.Add(t);
+                    dependents.Add(s, sdependents);
+                    HashSet<string> sdependees = new HashSet<string>();
+                    dependees.Add(s, sdependees);
+
+                    HashSet<string> tdependents = new HashSet<string>();
+                    dependents.Add(t, tdependents);
+                    HashSet<string> tdependees = new HashSet<string>();
+                    tdependees.Add(s);
+                    dependees.Add(t, tdependees);
+                }
             }
             size++;
 
@@ -193,13 +207,13 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
-            foreach (string t in dependents[s])
+            foreach (string t in dependents[s])  //for each node that was originally dependent of s
             {
                 dependees[t].Remove(s);  //remove s from being its dependee
 
             }
-            dependents[s].Clear();
-            foreach (string d in newDependents)
+            dependents[s].Clear(); 
+            foreach (string d in newDependents)  //add each node to 
             {
                 if (dependees.ContainsKey(d))
                 {
