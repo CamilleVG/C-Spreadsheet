@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security;
@@ -18,17 +19,21 @@ namespace FormulaEvaluator
     public class Evaluator
     {
         public delegate int Lookup(String v);
-        //a method that looks up the value of a variable, otherwise throws Argument Exception("unkown variable"
+        //a method that looks up the value of a variable, otherwise throws Argument Exception("unkown variable")
         public static int Evaluate(String exp, Lookup variableEvaluator)
         {
             
             Lookup findVarValue = variableEvaluator;
-
+            if (exp.Equals(""))
+            {
+                throw new ArgumentException("String argument is empty.");
+            }
             string[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");  //splits string into tokens
 
             Stack<char> operatorsStack = new Stack<char>();  //holds operators of expression
             Stack<int> valuesStack = new Stack<int>();  //holds values of expression
 
+            bool parenthesisHasOperator = false;
             for (int i = 0; i < substrings.Length; i++)
             {
                 string token = substrings[i];
@@ -46,6 +51,7 @@ namespace FormulaEvaluator
                     token = varToken.ToString();
 
                 }
+                
                 int t;
                 bool isInteger = int.TryParse(token, out t);  //determines if token is an integer
                 if (!(token.Equals("(")|| token.Equals(")") || token.Equals("*") || token.Equals("/") || token.Equals("+") || token.Equals("-") || isInteger || IsVar(token)))//if token does not equals (,),+,-,*,/, non-negative integer, or variable 
@@ -56,7 +62,7 @@ namespace FormulaEvaluator
                 if (isInteger) //if token is a integer
                 {
                     int intToken = int.Parse(token);
-                    if (operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/')) //if * or / is on top of the operator stack
+                    if ((operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/'))) //if * or / is on top of the operator stack
                     {
                         //pop the value stack and operator stack and apply the operator to the token and popped number
 
@@ -97,7 +103,15 @@ namespace FormulaEvaluator
                     {
                         //pop the value stack twice and the operator stack once
                         //apply the operator to the numbers, and push result onto value stack
-                        PopPopPopEvalPush(operatorsStack, valuesStack);
+                        if (valuesStack.Count < 2)
+                        {
+                            throw new ArgumentException("Syntax error.");
+                        }
+                        else
+                        {
+                            PopPopPopEvalPush(operatorsStack, valuesStack);
+                        }
+                        
                     }
                     //push token onto the operators stack
                     operatorsStack.Push(op);
@@ -106,6 +120,11 @@ namespace FormulaEvaluator
                 if (token.Equals("*") || token.Equals("/")) //if token it a * or /
                 {
                     // push token onto the operator stack
+                    parenthesisHasOperator = true;
+                    if (operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/')) //evaluate operations in order left to right
+                    {
+                        PopPopPopEvalPush(operatorsStack, valuesStack);
+                    }
                     char op = char.Parse(token);
                     operatorsStack.Push(op);  
                 }
@@ -115,10 +134,12 @@ namespace FormulaEvaluator
                     //push token onto operator stack
                     char parenthesis = '(';
                     operatorsStack.Push(parenthesis);
+                    parenthesisHasOperator = false;
                 }
                 
                 if (token.Equals(")")) //if token is a ')' right parenthesis
                 {
+                    //evaluatingInParenthesis = false;
                     if (operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/')) //if + or - is on top of the operator stack
                     {
                         //pop the value stack twice and the operator stack once
@@ -126,7 +147,11 @@ namespace FormulaEvaluator
                         //push the result onto the popped numbers
                         PopPopPopEvalPush(operatorsStack, valuesStack);
                         //next in the operator stack should be '('. Pop it.
-                        
+                        if (!operatorsStack.Pop().Equals('('))
+                        {
+                            throw new ArgumentException("Syntax error");
+                        }
+
                     }
                     if (operatorsStack.IsOnTop('+') || operatorsStack.IsOnTop('-')) //if * or / is on top of the operator stack
                     {
@@ -134,11 +159,24 @@ namespace FormulaEvaluator
                         //apply the popped operator to the popped numbers
                         //push the value on to the the value stack
                         PopPopPopEvalPush(operatorsStack, valuesStack);
-                        if (!operatorsStack.Pop().Equals('('))
+                       if (operatorsStack.Count == 0 ||!operatorsStack.Pop().Equals('('))
                         {
                             throw new ArgumentException("Syntax error");
                         }
+                        if(operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/'))
+                        {
+                            PopPopPopEvalPush(operatorsStack, valuesStack);
+                        }
                     }
+                    else
+                    {
+                        if (parenthesisHasOperator == false)
+                        {
+                            throw new ArgumentException("Syntax Error:  Parenthesis has no operator");
+                        }
+                    }
+                   
+                    
                 }
 
             }
@@ -154,7 +192,15 @@ namespace FormulaEvaluator
                      //There should be one operator on operator stack which is either + or -
                      //there should be two value on value stack 
                      //Apply the operator to the two values and return as value of expression
-                     PopPopPopEvalPush(operatorsStack, valuesStack);
+                     if (valuesStack.Count < 2)
+                {
+                    throw new ArgumentException("Syntax Error");
+                }
+                else
+                {
+                    PopPopPopEvalPush(operatorsStack, valuesStack);
+                }
+                     
                      return valuesStack.Pop();
                 }
         }
@@ -214,6 +260,11 @@ namespace FormulaEvaluator
                 result = num1 - num2;
 
             values.Push(result);
+
+            if (operators.IsOnTop('*') || operators.IsOnTop('/'))
+            {
+                PopPopPopEvalPush(operators, values);
+            }
         }
     }
     

@@ -74,7 +74,13 @@ namespace SpreadsheetUtilities
         /// </summary>
         public int this[string s]
         {
-            get { return dependees[s].Count; }
+            get {
+                if (this.dependees.ContainsKey(s))
+                {
+                    return dependees[s].Count;
+                }
+                return 0;
+                }
         }
 
 
@@ -83,7 +89,11 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependents(string s)
         {
-            return dependents[s].Count > 0;
+            if (dependents.ContainsKey(s))
+            {
+                return dependents[s].Count > 0;
+            }
+            return false;
         }
 
 
@@ -92,7 +102,11 @@ namespace SpreadsheetUtilities
         /// </summary>
         public bool HasDependees(string s)
         {
-            return dependees[s].Count > 0;
+            if (dependees.ContainsKey(s))
+            {
+                return dependees[s].Count > 0;
+            }
+            return false;
         }
 
 
@@ -101,7 +115,15 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
-            return dependents[s];
+            if (dependents.ContainsKey(s))
+            {
+                return dependents[s];
+            }
+            else
+            {
+                return new HashSet<string>();
+
+            }
         }
 
         /// <summary>
@@ -109,7 +131,14 @@ namespace SpreadsheetUtilities
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
-            return dependees[s];
+            if (dependees.ContainsKey(s))
+            {
+                return dependees[s];
+            }
+            else
+            {
+                return new HashSet<string>();
+            }
         }
 
 
@@ -125,16 +154,18 @@ namespace SpreadsheetUtilities
         /// <param name="t"> t cannot be evaluated until s is</param>        /// 
         public void AddDependency(string s, string t)
         {
-            if (dependents.ContainsKey(s) && dependees.ContainsKey(s) && dependents.ContainsKey(t) && dependees.ContainsKey(t)) {  //if both nodes already exist
+            if (dependents.ContainsKey(s) && dependees.ContainsKey(s) && dependents.ContainsKey(t) && dependees.ContainsKey(t))
+            {  //if both nodes already exist
 
                 if (!dependents[s].Contains(t))  //if t dependss on it, than the dependency already exisits
                 {
                     dependents[s].Add(t);
                     dependees[t].Add(s);
+                    size++;
                 }
             }
             //if node s already exists, but node t does not
-            else if (dependents.ContainsKey(s) && dependees.ContainsKey(s) && !dependents.ContainsKey(t) && !dependees.ContainsKey(t))  
+            else if (dependents.ContainsKey(s) && dependees.ContainsKey(s) && !dependents.ContainsKey(t) && !dependees.ContainsKey(t))
             {
                 dependents[s].Add(t);
 
@@ -143,7 +174,7 @@ namespace SpreadsheetUtilities
                 dependees.Add(t, tdependees);
                 HashSet<string> tdependents = new HashSet<string>();
                 dependents.Add(t, tdependents);
-
+                size++;
             }
             //if node t already exists, but node s does not
             else if (!dependents.ContainsKey(s) && !dependees.ContainsKey(s) && dependents.ContainsKey(t) && dependees.ContainsKey(t))
@@ -155,12 +186,13 @@ namespace SpreadsheetUtilities
                 HashSet<string> sdependents = new HashSet<string>();
                 sdependents.Add(t);
                 dependents.Add(s, sdependents);
+                size++;
             }
             //if niether node s nor node t already exist
             else //if (!dependents.ContainsKey(s) && !dependees.ContainsKey(s) && !dependents.ContainsKey(t) && !dependees.ContainsKey(t))
             {
 
-                if (s.Equals(t))  
+                if (s.Equals(t))
                 {
                     HashSet<string> sdependents = new HashSet<string>();
                     sdependents.Add(t);
@@ -183,8 +215,8 @@ namespace SpreadsheetUtilities
                     tdependees.Add(s);
                     dependees.Add(t, tdependees);
                 }
+                size++;
             }
-            size++;
 
         }
 
@@ -196,9 +228,14 @@ namespace SpreadsheetUtilities
         /// <param name="t"></param>
         public void RemoveDependency(string s, string t)
         {
-            dependents[s].Remove(t);
-            dependees[t].Remove(s);
-            size--;
+            if (dependents.ContainsKey(s)  && dependents.ContainsKey(t))
+            {
+                dependents[s].Remove(t);
+                dependees[t].Remove(s);
+                size--;
+            }
+            
+            
         }
 
 
@@ -208,6 +245,12 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
+            
+            if (!dependents.ContainsKey(s))
+            {
+                dependents.Add(s, new HashSet<string>());
+                dependees.Add(s, new HashSet<string>());
+            }
             foreach (string t in dependents[s])  //for each node that was originally dependent of s
             {
                 dependees[t].Remove(s);  //remove s from being its dependee
@@ -241,6 +284,13 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependees(string s, IEnumerable<string> newDependees)
         {
+            if (!dependees.ContainsKey(s))
+            {
+                dependees.Add(s, new HashSet<string>());
+                dependents.Add(s, new HashSet<string>());
+                size++;
+            }
+            
             foreach (string t in dependees[s])
             {
                 dependents[t].Remove(s);
