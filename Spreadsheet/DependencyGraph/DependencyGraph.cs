@@ -74,10 +74,18 @@ namespace SpreadsheetUtilities
         /// </summary>
         public int this[string s]
         {
+            /*
+             * From Discussion Alternative Way to Implement Method:
+             * 
+             * get {
+             *          return GetDependees(s).Count(); //O(N) --because Count() is a method, not necesarily better
+             * }
+             */
+            
             get {
                 if (this.dependees.ContainsKey(s))
                 {
-                    return dependees[s].Count;
+                    return dependees[s].Count;  //O(1)
                 }
                 return 0;
                 }
@@ -245,7 +253,15 @@ namespace SpreadsheetUtilities
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
-            
+            /**
+             * From Discussion, Better way to Implement Method:
+             * 
+             * foreach (string r in GetDependents(s))
+             *      RemoveDependency(s,r);   //Possible Error: Enumeration was modified, can't continue
+             * foreach (string t in newDependents)
+             *      AddDependency (s,t);
+             */
+
             if (!dependents.ContainsKey(s))
             {
                 dependents.Add(s, new HashSet<string>());
@@ -254,7 +270,6 @@ namespace SpreadsheetUtilities
             foreach (string t in dependents[s])  //for each node that was originally dependent of s
             {
                 dependees[t].Remove(s);  //remove s from being its dependee
-
             }
             dependents[s].Clear(); 
             foreach (string d in newDependents)  //add each node to the node s dependent set
