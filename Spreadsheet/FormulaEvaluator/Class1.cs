@@ -18,12 +18,15 @@ namespace FormulaEvaluator
 
     public class Evaluator
     {
-        public delegate int Lookup(String v);
+        //public delegate double Lookup(String v);
+        private static Func<string, double> findVarValue;
+        private static Func<string, bool> IsVar;
         //a method that looks up the value of a variable, otherwise throws Argument Exception("unkown variable")
-        public static int Evaluate(String exp, Lookup variableEvaluator)
+        public static double Evaluate(String exp, Func<string, double> variableEvaluator)
         {
             
-            Lookup findVarValue = variableEvaluator;
+            Evaluator.findVarValue = variableEvaluator;
+
             if (exp.Equals(""))
             {
                 throw new ArgumentException("String argument is empty.");
@@ -31,7 +34,10 @@ namespace FormulaEvaluator
             string[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");  //splits string into tokens
 
             Stack<char> operatorsStack = new Stack<char>();  //holds operators of expression
-            Stack<int> valuesStack = new Stack<int>();  //holds values of expression
+            Stack<Double> valuesStack = new Stack<Double>();  //holds values of expression
+
+            String varPattern = @"[a-zA-Z_](?: [a-zA-Z_]|\d)*";
+            IsVar = x => Regex.IsMatch(x, varPattern);
 
             bool parenthesisHasOperator = false;
             for (int i = 0; i < substrings.Length; i++)
@@ -47,21 +53,21 @@ namespace FormulaEvaluator
                 if (IsVar(token)) //if token is a variable
                 {
                     //proceed as above using the lookup value of token
-                    int varToken = findVarValue(token);
+                    double varToken = findVarValue(token);
                     token = varToken.ToString();
 
                 }
                 
-                int t;
-                bool isInteger = int.TryParse(token, out t);  //determines if token is an integer
-                if (!(token.Equals("(")|| token.Equals(")") || token.Equals("*") || token.Equals("/") || token.Equals("+") || token.Equals("-") || isInteger || IsVar(token)))//if token does not equals (,),+,-,*,/, non-negative integer, or variable 
+                double t;
+                bool isRealNumber = Double.TryParse(token, out t);  //determines if token is an integer
+                if (!(token.Equals("(")|| token.Equals(")") || token.Equals("*") || token.Equals("/") || token.Equals("+") || token.Equals("-") || isRealNumber || IsVar(token)))//if token does not equals (,),+,-,*,/, non-negative integer, or variable 
                 {
                     throw new ArgumentException("Error: Unexpected symbol");
                 }
 
-                if (isInteger) //if token is a integer
+                if (isRealNumber) //if token is a integer
                 {
-                    int intToken = int.Parse(token);
+                    double numToken = Double.Parse(token);
                     if ((operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/'))) //if * or / is on top of the operator stack
                     {
                         //pop the value stack and operator stack and apply the operator to the token and popped number
@@ -71,26 +77,26 @@ namespace FormulaEvaluator
                         {
                             throw new ArgumentException("Syntax Error: No more values to apply operator");
                         }
-                        int firstVal = valuesStack.Pop();
-                        int result;
+                        double firstVal = valuesStack.Pop();
+                        double result;
                         if (op == '*')
                         {
-                            result = firstVal * intToken;
+                            result = firstVal * numToken;
                         }
                         else // if (op == '/')
                         {
-                            if (intToken == 0)
+                            if (numToken == 0)
                             {
                                 throw new ArgumentException("Error: Divsion by 0");
                             }
-                            result = firstVal / intToken;
+                            result = firstVal / numToken;
                         }
 
                         valuesStack.Push(result);
                     }
                     else  //Otherwise, push token onto value stack
                     {
-                        valuesStack.Push(intToken);
+                        valuesStack.Push(numToken);
                     }
                     
                 }
@@ -210,32 +216,33 @@ namespace FormulaEvaluator
          * Helper Method:
          * Determines if token is a variable.
          */
-        static bool IsVar(string s)
-        {
+        //static bool IsVar(string s)
+        //{
+            
             //at least on letter
             //following all letters we need one digit
 
-            bool foundLetter = false;
-            bool foundDigit = false;
-            int i;
-            for (i = 0; i < s.Length; i++)
-            {
-                if (Char.IsLetter(s[i]))
-                    foundLetter = true;
-                else
-                    break;
-            }
+            //bool foundLetter = false;
+           /// bool foundDigit = false;
+           // int i;
+            //for (i = 0; i < s.Length; i++)
+            //{
+            //    if (Char.IsLetter(s[i]))
+             //       foundLetter = true;
+            //    else
+             //       break;
+           // }
 
-            for (; i < s.Length; i++)
-            {
-                if (Char.IsDigit(s[i]))
-                    foundDigit = true;
-                else
-                    break;
-            }
+          //  for (; i < s.Length; i++)
+          //  {
+          //      if (Char.IsDigit(s[i]))
+          //          foundDigit = true;
+           //     else
+           //         break;
+           // }
 
-            return foundLetter && foundDigit;
-        }
+            //return foundLetter && foundDigit;
+        //}
 
 
         /*
@@ -243,13 +250,13 @@ namespace FormulaEvaluator
          * Pops the value stack twice and the operator stack once. Then applies the operator to the numbers, 
          * and pushes result onto value stack.
          */
-        static void PopPopPopEvalPush(Stack<char> operators, Stack<int> values)
+        static void PopPopPopEvalPush(Stack<char> operators, Stack<Double> values)
         {
-            int num2 = values.Pop();
-            int num1 = values.Pop();
+            double num2 = values.Pop();
+            double num1 = values.Pop();
 
             char op = operators.Pop();
-            int result;
+            double result;
             if (op == '*')
                 result = num1 * num2;
             else if (op == '/')

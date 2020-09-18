@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Collections;
+using FormulaEvaluator;
 
 namespace SpreadsheetUtilities
 {
@@ -120,18 +121,14 @@ namespace SpreadsheetUtilities
             String doublePattern = @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?";
             IsRealNumber = x => Regex.IsMatch(x, doublePattern);
 
-            /// <sumary>
             /// One Token Rule:  There must be at least one token
-            /// </sumary>
-            /// 
             if (string.IsNullOrWhiteSpace(formula))
             {
                 throw new FormulaFormatException("Formula is empty.  Input valid formula.");
             }
 
-            
             /// Parsing:  after splitting formula into tokens, valid tokens are only (, ), +, -, *, /, variables, and decimal real numbers (including scientific notation)
-            Parsing();
+            string temp = Parsing();
 
             /// Right Parentheses Rule:  When reading the tokens from left to right, at no point should the number of closing parentheses seen so far be greater than the number on opening parentheses seen so far.
             /// Balanced Parentheses Rule:  The total number of opening parentheses must be equal to the total number of closing parentheses
@@ -154,9 +151,14 @@ namespace SpreadsheetUtilities
         /// <sumary>
         /// Parsing:  after splitting formula into tokens, valid tokens are 
         /// only (, ), +, -, *, /, variables, and decimal real numbers (including scientific notation)
+        /// 
+        /// Also builds a string while enumerating throw tokens if no exceptions are thrown.
+        /// This string is given to the ToString method.
         /// </sumary>
-        private void Parsing()
+        private string Parsing()
         {
+            StringBuilder temp = new StringBuilder();
+            
             HashSet<string> variables = new HashSet<string>();
             foreach (string var in GetVariables())
             {
@@ -176,14 +178,20 @@ namespace SpreadsheetUtilities
             //splits string into tokens, including around whitespace
             foreach (string token in GetTokens(formula))
             {
-                if (!variables.Contains(token))  //if the token is not a variable
+                if (IsVariable(normalizer(token)))
+                {
+                    temp.Append(normalizer(token));
+                }
+                else if (!variables.Contains(token))  //if the token is not a variable
                 {
                     if (!IsLeftParenthesis(token) || !IsRightParenthesis(token) || !IsLeftParenthesis(token) || !IsOperator(token) || !IsRealNumber(token))
                     {
                         throw new FormulaFormatException("The token " + token + "is not a valid input in formula.  Check input.");
                     }
+                    temp.Append(token);
                 }
             }
+            return temp.ToString();
         }
 
         /// <sumary>
@@ -248,13 +256,6 @@ namespace SpreadsheetUtilities
             {
                 tokenList.Add(token);
             }
-            /*First Token Rule:
-            string firstToken = (string)tokenList[0];
-            if (!IsVariable(firstToken) || IsRealNumber(firstToken) || IsLeftParenthesis(firstToken){
-                throw new FormulaFormatException("Formula did not start with a variable, number, or open parenthesis.  Check syntax of formula.");
-            }
-            */
-
             string lastToken = (string)tokenList[tokenList.Count - 1];
             if (!IsVariable(normalizer(lastToken)) || IsRealNumber(lastToken) || IsRightParenthesis(lastToken)){
                 throw new FormulaFormatException("Formula did not end with a variable, number, or open parenthesis.  Check syntax of formula.");
@@ -329,9 +330,18 @@ namespace SpreadsheetUtilities
         ///
         /// This method should never throw an exception.
         /// </summary>
+
         public object Evaluate(Func<string, double> lookup)
         {
-            return null;
+            try
+            {
+                double result = Evaluator.Evaluate(this.ToString(), lookup);
+                return result;
+            }
+            catch (ArgumentException e) {
+                return new FormulaError(e.Message);
+            }
+
         }
 
         /// <summary>
@@ -363,72 +373,6 @@ namespace SpreadsheetUtilities
                 }
             }
         }
-    /*
-        //if token contains a letter, check to see if it is a var
-        //if the token is not a valid variable by standard infix notation, is it a valid variable after being normalized?
-        string patternForChar = "^[a-zA-Z]+$";
-        Func<string, bool> IsChar = x => Regex.IsMatch(x, patternForChar);
-        if (IsChar(token))
-        {
-            string pattern = "^[a-zA-Z]+[0-9]+$";
-            Func<string, bool> IsVariable = x => Regex.IsMatch(x, pattern);
-            if (!IsVariable(Formula.normalizer(token)))  //Is the variable still a variable after being normalized?
-            {
-                throw new FormulaFormatException("Variable is invalid after being normalized.  Check vairables or normalizer method.");
-            }
-            if (!isValid(normalize(token)))
-            {
-                throw new FormulaFormatException("Variable is still invalid after being normalized.  Check vairables or normalizer method.");
-            }
-            string varToken = normalize(token);
-        }
-    }
-
-    //if token is in scientific notation
-    //parse token as a scientificly notated number
-    //string formula = (6.345e-34 + 9)/2
-    //Console.WriteLine("Scientific Notation: " + string.Format("{0:#.##E+00}", number3));
-
-    Decimal.Parse("2.09550901805872E-05", NumberStyles.AllowExponent | NumberStyles.AllowDecimalPoint);
-
-
-    Decimal.TryParse(token, out NumberStyles.Any);
-    decimal h2 = Decimal.Parse("2.09550901805872E-05", NumberStyles.Any);
-    if (token.Contains('e'))
-    {
-
-    }
-
-    /// If the formula contains a variable v such that normalize(v) is not a legal variable, 
-    /// throws a FormulaFormatException with an explanatory message. 
-    string pattern = "^[a-zA-Z]+[0-9]+$";  //one or more letters followed by one or more digits
-                                           //"variable consist of a letter of underscored followed by zero or more letter, uncerscores, or digits
-    Func<string, bool> IsVariable = x => Regex.IsMatch(x, pattern);
-    if (IsVariable(token))  //if token is variable
-    {
-        if (!IsVariable(normalize(token)))  //Is the variable still a variable after being normalized?
-        {
-            throw new FormulaFormatException("Variable is invalid after being normalized.  Check vairables or normalizer method.");
-        }
-        if (!isValid(normalize(token)))  //Does the variable meet the extra restrictions from the validator after being normalize
-        {
-            throw new FormulaFormatException("Variable does not meet validator restrictions after being normalized.  Check arguments.");
-        }
-        string varToken = normalize(token);
-    }
-
-    float t;
-    int.TryParse(token, out t);
-    bool isNumber = float.TryParse(token, out t);  //determines if token is an integer
-    if (!(token.Equals("(") || token.Equals(")") || token.Equals("*") || token.Equals("/") || token.Equals("+") || token.Equals("-") || isNumber))
-    //if token does not equals (,),+,-,*,/, non-negative integer
-    {
-        throw new FormulaFormatException("One of the tokens is not valid. Check that all tokens are either if (IsVar(token)) //if token is a variable");
-        {
-        }
-    }
-    */
-
 
     /// <summary>
     /// Returns a string containing no spaces which, if passed to the Formula
@@ -442,7 +386,8 @@ namespace SpreadsheetUtilities
     /// </summary>
     public override string ToString()
         {
-            return null;
+            string Result = Parsing();
+            return Result;
         }
 
         /// <summary>
@@ -467,7 +412,47 @@ namespace SpreadsheetUtilities
         /// </summary>
         public override bool Equals(object obj)
         {
-            return false;
+            if (obj.Equals(null))
+            {
+                return false;
+            }
+
+            try
+            {
+                Formula passedIn = (Formula) obj;
+                foreach (string passedInToken in GetTokens(passedIn.ToString()))
+                {
+                    //this.ToString() in stead of formula in order to get variables normalized 
+                    foreach(string thisToken in GetTokens(this.ToString()))
+                    {
+                        if (IsRealNumber(thisToken))
+                        {
+                            double dPassedIn = Double.Parse(passedInToken);
+                            double dThis = Double.Parse(thisToken);
+
+                            string backToStrPassedIn = dPassedIn.ToString();
+                            string backToStrThis = dThis.ToString();
+
+                            if (!backToStrPassedIn.Equals(backToStrThis))
+                            {
+                                return false;
+                            }
+                        }
+                        else //if (IsVariable(thisToken) || IsOperator(thisToken) || IsLeftParenthesis(thisToken) || IsRightParenthesis(thisToken))
+                        {
+                            if (!thisToken.Equals(passedInToken))
+                            {
+                                return false;
+                            }
+                        } 
+                    }
+                }
+                return true; ;
+            }
+            catch (FormulaFormatException e)
+            {
+                return false;
+            }
         }
 
         /// <summary>
