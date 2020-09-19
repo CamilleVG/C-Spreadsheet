@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace FormulaTests
 {
     [TestClass]
-    public class UnitTest1
+    public class FormulaTests
     {
         [TestMethod]
         public void CorrectInput1()
