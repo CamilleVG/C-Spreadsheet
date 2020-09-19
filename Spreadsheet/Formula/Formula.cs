@@ -21,10 +21,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using FormulaEvaluator;
 
 namespace SpreadsheetUtilities
 {
@@ -58,16 +58,20 @@ namespace SpreadsheetUtilities
         /// </summary>
         /// 
 
-        private string theFormula;
-        private Func<string, string> normalizer;
-        private Func<string, bool> validator;
+        private string theFormula;  //holds passed in formula from  constructor
+        private Func<string, string> normalizer; //holds passed in normalize method
+        private Func<string, bool> validator; //holds passed in IsValid method
 
-        private Func<string, bool> IsVariable;
-        private Func<string, bool> IsLeftParenthesis;
-        private Func<string, bool> IsRightParenthesis;
-        private Func<string, bool> IsOperator;
-        private Func<string, bool> IsRealNumber;
+        private Func<string, bool> IsVariable;  //determines whether a token is a variable
+        private Func<string, bool> IsLeftParenthesis; //determines whether a token is a '('
+        private Func<string, bool> IsRightParenthesis; //determines whether a token is a ')'
+        private Func<string, bool> IsOperator; //determines whether a token is +, -, *, or \
+        private Func<string, bool> IsRealNumber; //determines whether a token is a real number or number in scientfic notation
         private double result; //passed in reference for IsRealNumber => TryDoubleParse(out result)
+
+        //Instance variables copied from Evaluator class
+        private static Func<string, double> findVarValue;
+        private static Func<string, bool> IsVar;
 
         public Formula(String formula) :
             this(formula, s => s, s => true)
@@ -323,27 +327,242 @@ namespace SpreadsheetUtilities
         {
             try
             {
-                Func<string, Func<string, double>, double> eval = Evaluator.Evaluate;
-                double result = eval(this.ToString(), lookup);
-                return result;
+                
+                findVarValue = lookup;
+                string exp = this.ToString();
+
+                if (exp.Equals(""))
+                {
+                    throw new ArgumentException("String argument is empty.");
+                }
+                string[] substrings = Regex.Split(exp, "(\\()|(\\))|(-)|(\\+)|(\\*)|(/)");  //splits string into tokens
+
+                Stack<char> operatorsStack = new Stack<char>();  //holds operators of expression
+                Stack<Double> valuesStack = new Stack<Double>();  //holds values of expression
+
+                String varPattern = @"[a-zA-Z_](?: [a-zA-Z_]|\d)*";
+                IsVar = x => Regex.IsMatch(x, varPattern);
+
+                bool parenthesisHasOperator = false;
+                for (int i = 0; i < substrings.Length; i++)
+                {
+                    string token = substrings[i];
+
+                    if (token.Equals("")) //ignore empty strings
+                    {
+                        continue;
+                    }
+                    token = token.Trim();  //ignores leadding and trailing whitesspace in token
+
+                    if (IsVar(token)) //if token is a variable
+                    {
+                        //proceed as above using the lookup value of token
+                        double varToken = findVarValue(token);
+                        token = varToken.ToString();
+
+                    }
+
+                    double t;
+                    bool isRealNumber = Double.TryParse(token, out t);  //determines if token is an integer
+                    if (!(token.Equals("(") || token.Equals(")") || token.Equals("*") || token.Equals("/") || token.Equals("+") || token.Equals("-") || isRealNumber || IsVar(token)))//if token does not equals (,),+,-,*,/, non-negative integer, or variable 
+                    {
+                        throw new ArgumentException("Error: Unexpected symbol");
+                    }
+
+                    if (isRealNumber) //if token is a integer
+                    {
+                        double numToken = Double.Parse(token);
+                        if ((operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/'))) //if * or / is on top of the operator stack
+                        {
+                            //pop the value stack and operator stack and apply the operator to the token and popped number
+
+                            char op = operatorsStack.Pop();
+                            if (valuesStack.Count == 0)
+                            {
+                                throw new ArgumentException("Syntax Error: No more values to apply operator");
+                            }
+                            double firstVal = valuesStack.Pop();
+                            double result;
+                            if (op == '*')
+                            {
+                                result = firstVal * numToken;
+                            }
+                            else // if (op == '/')
+                            {
+                                if (numToken == 0)
+                                {
+                                    throw new ArgumentException("Error: Divsion by 0");
+                                }
+                                result = firstVal / numToken;
+                            }
+
+                            valuesStack.Push(result);
+                        }
+                        else  //Otherwise, push token onto value stack
+                        {
+                            valuesStack.Push(numToken);
+                        }
+
+                    }
+
+
+                    if (token.Equals("+") || token.Equals("-")) //if token is a + or - 
+                    {
+                        char op = char.Parse(token);
+                        if (operatorsStack.IsOnTop('+') || operatorsStack.IsOnTop('-')) //if + or - is already on top of the operators stack
+                        {
+                            //pop the value stack twice and the operator stack once
+                            //apply the operator to the numbers, and push result onto value stack
+                            if (valuesStack.Count < 2)
+                            {
+                                throw new ArgumentException("Syntax error.");
+                            }
+                            else
+                            {
+                                PopPopPopEvalPush(operatorsStack, valuesStack);
+                            }
+
+                        }
+                        //push token onto the operators stack
+                        operatorsStack.Push(op);
+                    }
+
+                    if (token.Equals("*") || token.Equals("/")) //if token it a * or /
+                    {
+                        // push token onto the operator stack
+                        parenthesisHasOperator = true;
+                        if (operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/')) //evaluate operations in order left to right
+                        {
+                            PopPopPopEvalPush(operatorsStack, valuesStack);
+                        }
+                        char op = char.Parse(token);
+                        operatorsStack.Push(op);
+                    }
+
+                    if (token.Equals("(")) //if  token is a '(' left parenthesis
+                    {
+                        //push token onto operator stack
+                        char parenthesis = '(';
+                        operatorsStack.Push(parenthesis);
+                        parenthesisHasOperator = false;
+                    }
+
+                    if (token.Equals(")")) //if token is a ')' right parenthesis
+                    {
+                        //evaluatingInParenthesis = false;
+                        if (operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/')) //if + or - is on top of the operator stack
+                        {
+                            //pop the value stack twice and the operator stack once
+                            //apply the popped operator to the popped numbers
+                            //push the result onto the popped numbers
+                            PopPopPopEvalPush(operatorsStack, valuesStack);
+                            //next in the operator stack should be '('. Pop it.
+                            if (!operatorsStack.Pop().Equals('('))
+                            {
+                                throw new ArgumentException("Syntax error");
+                            }
+
+                        }
+                        if (operatorsStack.IsOnTop('+') || operatorsStack.IsOnTop('-')) //if * or / is on top of the operator stack
+                        {
+                            //pop the value stack twice and the operator stack once
+                            //apply the popped operator to the popped numbers
+                            //push the value on to the the value stack
+                            PopPopPopEvalPush(operatorsStack, valuesStack);
+                            if (operatorsStack.Count == 0 || !operatorsStack.Pop().Equals('('))
+                            {
+                                throw new ArgumentException("Syntax error");
+                            }
+                            if (operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/'))
+                            {
+                                PopPopPopEvalPush(operatorsStack, valuesStack);
+                            }
+                        }
+                        else
+                        {
+                            if (parenthesisHasOperator == false)
+                            {
+                                throw new ArgumentException("Syntax Error:  Parenthesis has no operator");
+                            }
+                        }
+
+
+                    }
+
+                }
+                //When the last token has been processed
+                if (operatorsStack.Count == 0) //if operator stack is empty
+                {
+                    //value stack should contain a single number 
+                    //pop it and report as value of the expression 
+                    return valuesStack.Pop();
+                }
+                else //if operator stack is not empty
+                {
+                    //There should be one operator on operator stack which is either + or -
+                    //there should be two value on value stack 
+                    //Apply the operator to the two values and return as value of expression
+                    if (valuesStack.Count < 2)
+                    {
+                        throw new ArgumentException("Syntax Error");
+                    }
+                    else
+                    {
+                        PopPopPopEvalPush(operatorsStack, valuesStack);
+                    }
+
+                    return valuesStack.Pop();
+                }
             }
             catch (ArgumentException e) {
                 return new FormulaError(e.Message);
             }
         }
 
-        /// <summary>
-        /// Enumerates the normalized versions of all of the variables that occur in this 
-        /// formula.  No normalization may appear more than once in the enumeration, even 
-        /// if it appears more than once in this Formula.
-        /// 
-        /// For example, if N is a method that converts all the letters in a string to upper case:
-        /// 
-        /// new Formula("x+y*z", N, s => true).GetVariables() should enumerate "X", "Y", and "Z"
-        /// new Formula("x+X*z", N, s => true).GetVariables() should enumerate "X" and "Z".
-        /// new Formula("x+X*z").GetVariables() should enumerate "x", "X", and "z".
-        /// </summary>
-        public IEnumerable<String> GetVariables()
+
+
+        /*
+         * Helper Method:
+         * Pops the value stack twice and the operator stack once. Then applies the operator to the numbers, 
+         * and pushes result onto value stack.
+         */
+        static void PopPopPopEvalPush(Stack<char> operators, Stack<Double> values)
+        {
+            double num2 = values.Pop();
+            double num1 = values.Pop();
+
+            char op = operators.Pop();
+            double result;
+            if (op == '*')
+                result = num1 * num2;
+            else if (op == '/')
+                result = num1 / num2;
+            else if (op == '+')
+                result = num1 + num2;
+            else //if (op == '-')
+                result = num1 - num2;
+
+            values.Push(result);
+
+            if (operators.IsOnTop('*') || operators.IsOnTop('/'))
+            {
+                PopPopPopEvalPush(operators, values);
+            }
+        }
+    
+
+    /// <summary>
+    /// Enumerates the normalized versions of all of the variables that occur in this 
+    /// formula.  No normalization may appear more than once in the enumeration, even 
+    /// if it appears more than once in this Formula.
+    /// 
+    /// For example, if N is a method that converts all the letters in a string to upper case:
+    /// 
+    /// new Formula("x+y*z", N, s => true).GetVariables() should enumerate "X", "Y", and "Z"
+    /// new Formula("x+X*z", N, s => true).GetVariables() should enumerate "X" and "Z".
+    /// new Formula("x+X*z").GetVariables() should enumerate "x", "X", and "z".
+    /// </summary>
+    public IEnumerable<String> GetVariables()
         {
             SortedSet<string> normalizedTokens = new SortedSet<string>(); //holds variables that have been enumerated
 
@@ -548,4 +767,15 @@ namespace SpreadsheetUtilities
         /// </summary>
         public string Reason { get; private set; }
     }
+}
+static class StackExtensions
+{
+    public static bool IsOnTop(this Stack<char> s, char C)
+    {
+        if (s.Count < 1)
+            return false;
+        return s.Peek().Equals(C);
+
+    }
+
 }
