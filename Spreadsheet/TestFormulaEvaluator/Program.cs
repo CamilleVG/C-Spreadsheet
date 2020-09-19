@@ -5,44 +5,6 @@ using System.Collections.Generic;
 namespace TestFormulaEvaluator
 {
 
-    int x = 6;
-    public class Thing
-    {
-        public int x;
-    }
-    static void Main(string[] args)
-    {
-        string s1 = "3.00000000001";
-        string s2 = "3.0";
-
-        Console.WriteLine(s1 == s2);  //will return false;
-
-        double d1 = Double.Parse(s1);
-        double d2 = Double.Parse(s2);
-
-        Console.WriteLine(d1 == d2); //wll return false
-        //we will convert them to a double then back to a string
-        //As far as the formula is concerned, the precision level of 
-        //string determines if numbers are the same
-        string backToString1 = d1.ToString();  //"3.000"
-        string backToString2 = d2.ToString();  //"3.000"
-
-        Console.WriteLine(backToString1 == backToString2); //will return true
-
-        Thing t = new Thing();
-        t.x = 5;
-        Console.WriteLine();
-
-     }
-
-    static void ReplaceInt(ref Thing t)
-    {
-        t.x = 5;
-    }
-
-
-
-
 
     /*
      * I Used this project for notes in discussion section.  I have not used the project for testing
@@ -88,7 +50,7 @@ namespace TestFormulaEvaluator
     class Program
     {
 
-        public static int NoVarsLookup(string s)
+        public static double NoVarsLookup(string s)
         {
             Console.WriteLine("lookup was invoked");
             return 1;
