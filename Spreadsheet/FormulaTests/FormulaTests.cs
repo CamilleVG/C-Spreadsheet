@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpreadsheetUtilities;
 using System.Collections.Generic;
@@ -11,9 +11,9 @@ namespace FormulaTests
         public void CorrectInput1()
         {
             Formula f = new Formula("5.6 - 3.6");
-            
-            double result = (double)f.Evaluate(x=>0);
-            Assert.AreEqual(2.0, (double)f.Evaluate(x=>0), 1e-9);
+
+            double result = (double)f.Evaluate(x => 0);
+            Assert.AreEqual(2.0, (double)f.Evaluate(x => 0), 1e-9);
             //(double expected, double actual, double delta)
             //use 1e-9 for all of your unit tests
         }
@@ -79,7 +79,7 @@ namespace FormulaTests
             Formula f = new Formula("(4+5) + (10/(4-2)");
         }
 
-        
+
         /// <summary>
         /// f.GetVariables should numerate the normalized versions of all of the variables that occur in this 
         /// formula.  No normalization may appear more than once in the enumeration, even 
@@ -157,7 +157,7 @@ namespace FormulaTests
         [TestMethod(), Timeout(5000)]
         public void ToStrings1()
         {
-            Formula f = new Formula("x+y", s=> s.ToUpper(), s=> true);
+            Formula f = new Formula("x+y", s => s.ToUpper(), s => true);
             Assert.AreEqual(f.ToString(), "X+Y");
         }
         /// <summary>
@@ -206,15 +206,15 @@ namespace FormulaTests
         [TestMethod(), Timeout(5000)]
         public void EqualsWithExactSameStringInput()
         {
-            
+
             Assert.IsTrue(new Formula("x+Y").Equals(new Formula("x+Y")));
         }
         [TestMethod(), Timeout(5000)]
         public void EqualsWithNormalizedVariables()
         {
-            Assert.IsTrue(new Formula("x1+y2", s => s.ToUpper(), s=> true).Equals(new Formula("X1+Y2")));
+            Assert.IsTrue(new Formula("x1+y2", s => s.ToUpper(), s => true).Equals(new Formula("X1+Y2")));
         }
-        //[TestMethod()], Timeout(5000)]
+        [TestMethod(), Timeout(5000)]
         public void EqualsWithDifferentCapitalizationInVariables()
         {
             Formula f = new Formula("x1+y2");
@@ -225,7 +225,7 @@ namespace FormulaTests
         {
             Assert.IsFalse(new Formula("x1+y2").Equals(new Formula("y2+x1")));
         }
-        [TestMethod()]//, Timeout(5000)]
+        [TestMethod(), Timeout(5000)]
         public void EqualsWithEquaivalentDecimalsOfDifferentPrecision()
         {
             Formula f = new Formula("2.000+y2");
@@ -283,7 +283,7 @@ namespace FormulaTests
             Formula f2 = null;
             Assert.IsFalse(f1 != f2);
         }
-        
+
         [TestMethod(), Timeout(5000)]
         public void NotEqualsSymbolsFirstInputIsNullReturnsTrue()
         {
@@ -330,6 +330,5 @@ namespace FormulaTests
             int code2 = f2.GetHashCode();
             Assert.IsFalse(code1.Equals(code2));
         }
-
     }
 }
