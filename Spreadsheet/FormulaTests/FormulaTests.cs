@@ -3,13 +3,6 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpreadsheetUtilities;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Globalization;
-using System.Collections;
-
 namespace FormulaTests
 {
     [TestClass]
@@ -189,12 +182,6 @@ namespace FormulaTests
             Formula f = new Formula(F.ToString());
             Assert.IsTrue(F.Equals(f));
         }
-        [TestMethod(), Timeout(5000)]
-        public void ToStrings4()
-        {
-            Formula F = new Formula("y1+x1");
-            Assert.IsTrue(F.ToString().Equals("x1+y1"));
-        }
 
 
         /// <summary>
@@ -239,16 +226,110 @@ namespace FormulaTests
         {
             Assert.IsFalse(new Formula("x1+y2").Equals(new Formula("y2+x1")));
         }
-        [TestMethod(), Timeout(5000)]
+        [TestMethod()]//, Timeout(5000)]
         public void EqualsWithEquaivalentDecimalsOfDifferentPrecision()
         {
             Formula f = new Formula("2.000+y2");
-            Assert.IsTrue(f.ToString().Equals("2.0+y2"));
+            Assert.IsTrue(new Formula("2.0 + x7").Equals(new Formula("2.000+x7")));
         }
         [TestMethod(), Timeout(5000)]
         public void EqualsWithNullObject()
         {
             Assert.IsFalse(new Formula("x+Y").Equals(null));
+        }
+        [TestMethod(), Timeout(5000)]
+        public void EqualsOnObjectThatIsNotFormula()
+        {
+            Assert.IsFalse(new Formula("x+Y").Equals("%+!"));
+        }
+        [TestMethod(), Timeout(5000)]
+        public void EqualsSymbolBothInputsAreNull()
+        {
+            Formula f1 = null;
+            Formula f2 = null;
+            Assert.IsTrue(f1 == f2);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void EqualsSymbolsFirstInputIsNull()
+        {
+            Formula f1 = null;
+            Formula f2 = new Formula("1+2");
+            Assert.IsFalse(f1 == f2);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void EqualsSymbolsSecondInputIsNull()
+        {
+            Formula f1 = new Formula("1+2");
+            Formula f2 = null;
+            Assert.IsFalse(f1 == f2);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void EqualsSymbolsBothValidInputsAreEqual()
+        {
+            Formula f1 = new Formula("1+2");
+            Formula f2 = new Formula("1.0 + 2.0");
+            Assert.IsTrue(f1 == f2);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void EqualsSymbolsValidInputsAreNOTEqual()
+        {
+            Formula f1 = new Formula("1+2");
+            Formula f2 = new Formula("1.0 + 5");
+            Assert.IsFalse(f1 == f2);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void NotEqualsSymbolsBothInputsNullReturnsFalse()
+        {
+            Formula f1 = null;
+            Formula f2 = null;
+            Assert.IsFalse(f1 != f2);
+        }
+        
+        [TestMethod(), Timeout(5000)]
+        public void NotEqualsSymbolsFirstInputIsNullReturnsTrue()
+        {
+            Formula f1 = null;
+            Formula f2 = new Formula("12/6");
+            Assert.IsTrue(f1 != f2);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void NotEqualsSymbolsSecondInputIsNullReturnsTrue()
+        {
+            Formula f1 = new Formula("12/6");
+            Formula f2 = null;
+            Assert.IsTrue(f1 != f2);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void NotEqualsSymbolsValidInputsAreEqualReturnsFalse()
+        {
+            Formula f1 = new Formula("1+2");
+            Formula f2 = new Formula("1.0 + 2.0");
+            Assert.IsFalse(f1 != f2);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void NotEqualsSymbolsValidInputsAreNotEqualReturnsTrue()
+        {
+            Formula f1 = new Formula("1+2");
+            Formula f2 = new Formula("1.0 + 5");
+            Assert.IsTrue(f1 != f2);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void GetHashCodeReturnsSameCodeForSameFormula()
+        {
+            Formula f1 = new Formula("1+2");
+            Formula f2 = new Formula("1.0 + 2.0");
+            int code1 = f1.GetHashCode();
+            int code2 = f1.GetHashCode();
+            Assert.IsTrue(code1.Equals(code2));
+        }
+        [TestMethod(), Timeout(5000)]
+        public void GetHashCodeReturnsDifferentCodesForDifferentFormulas()
+        {
+            Formula f1 = new Formula("1+2");
+            Formula f2 = new Formula("1.0 + 9");
+            int code1 = f1.GetHashCode();
+            int code2 = f2.GetHashCode();
+            Assert.IsFalse(code1.Equals(code2));
         }
 
     }

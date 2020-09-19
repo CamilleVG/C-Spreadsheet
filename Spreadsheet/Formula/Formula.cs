@@ -15,6 +15,8 @@
 // Change log:
 //  (Version 1.2) Changed the definition of equality with regards
 //                to numeric tokens
+//@author Camille van Ginkel wrote and implemented assigned methods for PS3
+
 
 
 using System;
@@ -290,7 +292,7 @@ namespace SpreadsheetUtilities
                 {
                     if (!(IsRightParenthesis(token) || IsOperator(token)))
                     {
-                        throw new FormulaFormatException("The token " + token +" followed a number, variable or right parenthesis.  The token should be an operator or anouther right parenthesis.  Check syntax of formula.");
+                        throw new FormulaFormatException("The token " + token + " followed a number, variable or right parenthesis.  The token should be an operator or anouther right parenthesis.  Check syntax of formula.");
                     }
                     checkNext = false;
                 }
@@ -409,8 +411,10 @@ namespace SpreadsheetUtilities
             {
                 return false;
             }
-            try
+            if (!(obj is Formula))
             {
+                return false;
+            }
                 string thisString = this.ToString();
 
                 Formula passedIn = (Formula) obj;
@@ -422,7 +426,7 @@ namespace SpreadsheetUtilities
                     {
                         double dPassedIn = Double.Parse(passedInToken);
                         string backToStrPassedIn = dPassedIn.ToString();
-                        passedInString.Replace(passedInToken, backToStrPassedIn);
+                        passedInString = passedInString.Replace(passedInToken, backToStrPassedIn);
                     }
                 }
 
@@ -432,15 +436,10 @@ namespace SpreadsheetUtilities
                     {
                         double dThis = Double.Parse(thisToken);
                         string backToStrThis = dThis.ToString();
-                        thisString.Replace(thisToken, backToStrThis);
+                        thisString= thisString.Replace(thisToken, backToStrThis);
                     }
                 }
                 return thisString.Equals(passedInString);
-            }
-            catch (FormulaFormatException e)
-            {
-                return false;
-            }
         }
 
         /// <summary>
@@ -450,7 +449,15 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator ==(Formula f1, Formula f2)
         {
-            return false;
+            if (f1 is null  && f2 is null)
+            {
+                return true;
+            }
+            if (f1 is null || f2 is null)
+            {
+                return false;
+            }
+            return f1.Equals(f2);
         }
 
         /// <summary>
@@ -460,7 +467,15 @@ namespace SpreadsheetUtilities
         /// </summary>
         public static bool operator !=(Formula f1, Formula f2)
         {
-            return false;
+            if(f1 is null && f2 is null)
+            {
+                return false;
+            }
+            if (f1 is null || f2 is null)
+            {
+                return true;
+            }
+            return !f1.Equals(f2);
         }
 
         /// <summary>

@@ -6,10 +6,10 @@ namespace UnitTestEvaluator
     [TestClass]
     public class UnitTest1
     {
-        public static int NoVarsLookup(string s)
+        public static double NoVarsLookup(string s)
         {
             //Console.WriteLine("lookup was invoked");
-            return 1;
+            return 1.0;
             //throw new ArgumentException("unkown variable");
         }
         
