@@ -22,12 +22,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Globalization;
-using System.Collections;
 using FormulaEvaluator;
 
 namespace SpreadsheetUtilities
@@ -76,7 +72,6 @@ namespace SpreadsheetUtilities
         public Formula(String formula) :
             this(formula, s => s, s => true)
         {
-            
         }
 
         /// <summary>
@@ -122,7 +117,6 @@ namespace SpreadsheetUtilities
             IsRealNumber = x => Double.TryParse(x, out result);
             //String doublePattern = @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?";
             //IsRealNumber = x => Regex.IsMatch(x, doublePattern); 
-
 
 
             /// One Token Rule:  There must be at least one token
@@ -335,7 +329,6 @@ namespace SpreadsheetUtilities
             catch (ArgumentException e) {
                 return new FormulaError(e.Message);
             }
-
         }
 
         /// <summary>
@@ -379,11 +372,11 @@ namespace SpreadsheetUtilities
     /// new Formula("x + Y").ToString() should return "x+Y"
     /// </summary>
     public override string ToString()
-        {
+    {
             //Parsing() builds string while enumerating through GetTokens and normalizes variables
             string Result = Parsing();
             return Result;
-        }
+    }
 
         /// <summary>
         /// If obj is null or obj is not a Formula, returns false.  Otherwise, reports
