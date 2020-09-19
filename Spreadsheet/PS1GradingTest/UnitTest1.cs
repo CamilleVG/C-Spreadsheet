@@ -192,7 +192,7 @@ namespace PS1GradingTests
         }
 
 
-        [TestMethod()]//, Timeout(5000)]
+        [TestMethod(), Timeout(5000)]
         [TestCategory("25")]
         [ExpectedException(typeof(ArgumentException))]
         public void TestEmpty()
