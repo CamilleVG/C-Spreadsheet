@@ -323,7 +323,8 @@ namespace SpreadsheetUtilities
         {
             try
             {
-                double result = Evaluator.Evaluate(this.ToString(), lookup);
+                Func<string, Func<string, double>, double> eval = Evaluator.Evaluate;
+                double result = eval(this.ToString(), lookup);
                 return result;
             }
             catch (ArgumentException e) {

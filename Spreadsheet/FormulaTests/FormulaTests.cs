@@ -2,7 +2,8 @@ using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpreadsheetUtilities;
 using System.Collections.Generic;
-namespace FormulaEvaluator
+
+namespace FormulaTests
 {
     [TestClass]
     public class FormulaTests
