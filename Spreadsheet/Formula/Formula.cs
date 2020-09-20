@@ -276,7 +276,6 @@ namespace SpreadsheetUtilities
                 }
             }
         }
-
         /// <sumary>
         /// Extra Following Rule:  Any token that immediately follows a number a variable 
         /// or a closing parenthesis must be either an operator or a closing parenthesis
@@ -343,7 +342,7 @@ namespace SpreadsheetUtilities
                 String varPattern = @"[a-zA-Z_](?: [a-zA-Z_]|\d)*";
                 IsVar = x => Regex.IsMatch(x, varPattern);
 
-                bool parenthesisHasOperator = false;
+                bool checkIfNextTokenIsRightParen = false;
                 for (int i = 0; i < substrings.Length; i++)
                 {
                     string token = substrings[i];
@@ -395,8 +394,11 @@ namespace SpreadsheetUtilities
                                 }
                                 result = firstVal / numToken;
                             }
-
                             valuesStack.Push(result);
+                            if (operatorsStack.IsOnTop('('))
+                            {
+                                checkIfNextTokenIsRightParen = true;
+                            }
                         }
                         else  //Otherwise, push token onto value stack
                         {
@@ -430,11 +432,6 @@ namespace SpreadsheetUtilities
                     if (token.Equals("*") || token.Equals("/")) //if token it a * or /
                     {
                         // push token onto the operator stack
-                        parenthesisHasOperator = true;
-                        if (operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/')) //evaluate operations in order left to right
-                        {
-                            PopPopPopEvalPush(operatorsStack, valuesStack);
-                        }
                         char op = char.Parse(token);
                         operatorsStack.Push(op);
                     }
@@ -444,25 +441,11 @@ namespace SpreadsheetUtilities
                         //push token onto operator stack
                         char parenthesis = '(';
                         operatorsStack.Push(parenthesis);
-                        parenthesisHasOperator = false;
                     }
 
                     if (token.Equals(")")) //if token is a ')' right parenthesis
                     {
-                        //evaluatingInParenthesis = false;
-                        if (operatorsStack.IsOnTop('*') || operatorsStack.IsOnTop('/')) //if + or - is on top of the operator stack
-                        {
-                            //pop the value stack twice and the operator stack once
-                            //apply the popped operator to the popped numbers
-                            //push the result onto the popped numbers
-                            PopPopPopEvalPush(operatorsStack, valuesStack);
-                            //next in the operator stack should be '('. Pop it.
-                            if (!operatorsStack.Pop().Equals('('))
-                            {
-                                throw new ArgumentException("Syntax error");
-                            }
-
-                        }
+                        
                         if (operatorsStack.IsOnTop('+') || operatorsStack.IsOnTop('-')) //if * or / is on top of the operator stack
                         {
                             //pop the value stack twice and the operator stack once
@@ -478,15 +461,10 @@ namespace SpreadsheetUtilities
                                 PopPopPopEvalPush(operatorsStack, valuesStack);
                             }
                         }
-                        else
+                        if (operatorsStack.IsOnTop('(') && checkIfNextTokenIsRightParen)
                         {
-                            if (parenthesisHasOperator == false)
-                            {
-                                throw new ArgumentException("Syntax Error:  Parenthesis has no operator");
-                            }
+                            operatorsStack.Pop();
                         }
-
-
                     }
 
                 }

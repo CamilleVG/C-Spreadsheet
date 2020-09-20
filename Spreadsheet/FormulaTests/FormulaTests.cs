@@ -3,13 +3,192 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SpreadsheetUtilities;
 using System.Collections.Generic;
 
+//Copied all tests whose names starts with "Test" from PS1 Grading Tests created by Daniel Kopta
+//
+//@author Camille van Ginkel wrote and implemented units tests
 namespace FormulaTests
 {
     [TestClass]
     public class FormulaTests
     {
+        /*
+         * Tests Copied from PS1 GradingTests (not written by me)
+         * Edited to test Formula's Evaluate method instead Evaluators Evaluate method
+         */
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("1")]
+        public void TestSingleNumber()
+        {
+            Formula f = new Formula("5");
+            Assert.AreEqual(5, (double) f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("2")]
+        public void TestSingleVariable()
+        {
+            Formula f = new Formula("X5");
+            Assert.AreEqual(13, (double)f.Evaluate(s => 13), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("3")]
+        public void TestAddition()
+        {
+            Formula f = new Formula("5+3");
+            Assert.AreEqual(8, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("4")]
+        public void TestSubtraction()
+        {
+            Formula f = new Formula("18-10");
+            Assert.AreEqual(8, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("5")]
+        public void TestMultiplication()
+        {
+            Formula f = new Formula("2*4");
+            Assert.AreEqual(8, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("6")]
+        public void TestDivision()
+        {
+            Formula f = new Formula("16/2");
+            Assert.AreEqual(8, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("7")]
+        public void TestArithmeticWithVariable()
+        {
+            Formula f = new Formula("2+X1");
+            Assert.AreEqual(6, (double)f.Evaluate(s => 4), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("8")]
+        public void TestUnknownVariable()
+        {
+            Formula f = new Formula("2+X1");
+            object result = f.Evaluate(s => { throw new ArgumentException("Unknown variable"); });
+            Assert.IsTrue(result is FormulaError);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("9")]
+        public void TestLeftToRight()
+        {
+            Formula f = new Formula("2*6+3");
+            Assert.AreEqual(15, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("10")]
+        public void TestOrderOperations()
+        {
+            Formula f = new Formula("2+6*3");
+            Assert.AreEqual(20, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("11")]
+        public void TestParenthesesTimes()
+        {
+            Formula f = new Formula("(2+6)*3");
+            Assert.AreEqual(24, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("12")]
+        public void TestTimesParentheses()
+        {
+            Formula f = new Formula("2*(3+5)");
+            Assert.AreEqual(16, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("13")]
+        public void TestPlusParentheses()
+        {
+            Formula f = new Formula("2+(3+5)");
+            Assert.AreEqual(10, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("14")]
+        public void TestPlusComplex()
+        {
+            Formula f = new Formula("2+(3+5*9)");
+            Assert.AreEqual(50, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("15")]
+        public void TestOperatorAfterParens()
+        {
+            Formula f = new Formula("(1*1)-2/2");
+            Assert.AreEqual(0, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("16")]
+        public void TestComplexTimesParentheses()
+        {
+            Formula f = new Formula("2+3*(3+5)");
+            Assert.AreEqual(26, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("17")]
+        public void TestComplexAndParentheses()
+        {
+            Formula f = new Formula("2+3*5+(3+4*8)*5+2");
+            Assert.AreEqual(194, (double)f.Evaluate(s => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("26")]
+        public void TestComplexMultiVar()
+        {
+            Formula f = new Formula("y1*3-8/2+4*(8-9*2)/10*x7");
+            Assert.AreEqual(4, (double)f.Evaluate(s => (s == "x7") ? 1 : 4), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("27")]
+        public void TestComplexNestedParensRight()
+        {
+            Formula f = new Formula("x1+(x2+(x3+(x4+(x5+x6))))");
+            Assert.AreEqual(6, (double)f.Evaluate(s => 1));
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("28")]
+        public void TestComplexNestedParensLeft()
+        {
+            Formula f = new Formula("((((x1+x2)+x3)+x4)+x5)+x6");
+            Assert.AreEqual(12, (double)f.Evaluate(s => 2));
+        }
+
+        [TestMethod(), Timeout(5000)]
+        [TestCategory("29")]
+        public void TestRepeatedVar()
+        {
+            Formula f = new Formula("a4-a4*a4/a4");
+            Assert.AreEqual(0, (double)f.Evaluate(s => 3));
+        }
+
+
+
         [TestMethod]
-        public void CorrectInput1()
+        public void CorrectInputDoesNotThrow()
         {
             Formula f = new Formula("5.6 - 3.6");
 
@@ -19,7 +198,7 @@ namespace FormulaTests
             //use 1e-9 for all of your unit tests
         }
         [TestMethod]
-        public void CorrectInput2()
+        public void CorrectInputWithDecimalMultiplicationDoesNotThrow()
         {
             Formula f = new Formula("20/(1.50 + 2.50) + 5");
 
@@ -30,7 +209,7 @@ namespace FormulaTests
         }
 
         [TestMethod]
-        public void CorrectInputWithVars1()
+        public void CorrectInputWithVarsDoesNotThrow()
         {
             Formula f = new Formula("20/(1.50 + 2.50) + 5 + x1*(x5 + x8)", s => s.ToUpper(), s => s.StartsWith("X"));
 
@@ -40,8 +219,15 @@ namespace FormulaTests
             //use 1e-9 for all of your unit tests
         }
 
+        [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void UsingParenthesisForMultiplicationException()
+        {
+            Formula f1 = new Formula("(2+1)(2+2)");
+        }
+
         [TestMethod]
-        public void DivideBy0()
+        public void DivideBy0ReturnsFormulaError()
         {
             Formula f = new Formula("5/0");
             //"5/(3.3-2.2 -1.1)" does not throw error
@@ -162,6 +348,7 @@ namespace FormulaTests
             Assert.AreEqual(f.ToString(), "X+Y");
         }
         /// <summary>
+        /// Tests ToStrings Method
         /// new Formula("x + Y").ToString() should return "x+Y"
         /// </summary>
         [TestMethod(), Timeout(5000)]
@@ -331,5 +518,72 @@ namespace FormulaTests
             int code2 = f2.GetHashCode();
             Assert.IsFalse(code1.Equals(code2));
         }
+        [TestMethod(), Timeout(5000)]
+        public void EvaluateLotsOfMultiplication()
+        {
+            Formula f1 = new Formula("1*2*3*4*5*6*7*8*(5+5)");
+            Formula f2 = new Formula("(9-(10/(5-3)))");
+            int code1 = f1.GetHashCode();
+            int code2 = f2.GetHashCode();
+            Assert.IsFalse(code1.Equals(code2));
+        }
+
+        /*
+         * Test Methods for Formula's Evaluate method  
+         */
+
+        [TestMethod(), Timeout(5000)]
+        public void EvaluateComplicatedParenthesis()
+        {
+            //
+            Formula f1 = new Formula("(1+(2-2)+(3+(1+2))+(4+(2+(1+1))))");
+            Assert.AreEqual(15, (double)f1.Evaluate(x => 0), 1e-9);
+        }
+        [TestMethod()]//, Timeout(5000)]
+        public void EvaluateMultiplicationInsideOfParenthesis()
+        {
+            Formula f1 = new Formula("4*((10*1)*5)");
+            Assert.AreEqual(200, (double)f1.Evaluate(x => 0), 1e-9);
+        }
+        [TestMethod()]//, Timeout(5000)]
+        public void EvaluateDivisionInsideOfParenthesis()
+        {
+            Formula f1 = new Formula("1000/((50/2)/5)");
+            Assert.AreEqual(200, (double)f1.Evaluate(x => 0), 1e-9);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void EvaluateAddingFactions()
+        {
+            Formula f1 = new Formula("1/2 + 3/4 + 1/4 - 1/2");
+            Assert.AreEqual(1, (double)f1.Evaluate(x => 0), 1e-9);
+        }
+        [TestMethod(), Timeout(5000)]
+        public void EvaluateAddingDecimals()
+        {
+            Formula f1 = new Formula("0.5 + 0.75 + 0.25 - 0.5");
+            Assert.AreEqual(1, (double)f1.Evaluate(x => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        public void EvaluateMultiplyingDecimals()
+        {
+            Formula f1 = new Formula("0.5 * 0.5 * 0.5");
+            Assert.AreEqual(0.125, (double)f1.Evaluate(x => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        public void EvaluateMultiplyingFractions()
+        {
+            Formula f1 = new Formula("1/2 * 1/2 * 1/2");
+            Assert.AreEqual(0.125, (double)f1.Evaluate(x => 0), 1e-9);
+        }
+
+        [TestMethod(), Timeout(5000)]
+        public void EvaluateWithVariables()
+        {
+            Formula f1 = new Formula("x1 + x2*x3 - x4 + x5/x6*1");
+            Assert.AreEqual(2, (double)f1.Evaluate(x => 1), 1e-9);
+        }
+
     }
 }
