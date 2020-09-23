@@ -174,7 +174,7 @@ namespace SS
             HashSet<String> visited = new HashSet<String>();
             foreach (String name in names)
             {
-                if (!visited.Contains(name))
+                if (!visited.Contains(name))  ///If the cell has not been visited, visit it and all of its dependents
                 {
                     Visit(name, name, visited, changed);
                 }
@@ -196,23 +196,31 @@ namespace SS
         /// <summary>
         /// A helper for the GetCellsToRecalculate method.
         /// 
+        /// String start: is the first cell is the cell that was input into the Visit() call in GetCellsToRecalculate()
+        /// and it is the first cell that is visited.  The rest of its dependent cells are visted by recursion. 
+        /// String name: is the current cell that is being visited
+        /// LinkedList<String> changed: is the List of cells whose values need to be recalculated in the order in which they need to be recalculated
+        /// ISet<String> visited: is the set of cells that have already been visited
+        /// 
+        /// 
         ///   -- You should fully comment what is going on below --
         /// </summary>
         private void Visit(String start, String name, ISet<String> visited, LinkedList<String> changed)
         {
-            visited.Add(name);
-            foreach (String n in GetDirectDependents(name))
+            visited.Add(name);  ///updates the set of cells that haved been visited
+            foreach (String n in GetDirectDependents(name)) ///for each cell that directly depends on the current cell being visited
             {
-                if (n.Equals(start))
+                if (n.Equals(start)) ///if at any point in the recursion start is a dependent of start, then its a circular dependency
                 {
                     throw new CircularException();
                 }
-                else if (!visited.Contains(n))
+                else if (!visited.Contains(n))  ///if the dependent cell has not been visited, visit it
                 {
                     Visit(start, n, visited, changed);
                 }
             }
-            changed.AddFirst(name);
+            ///After recursively visiting all dependent cells and adding them to the changed list
+            changed.AddFirst(name);  ///add it to the current cell beginning of the list of cells that need to be changed
         }
 
     }

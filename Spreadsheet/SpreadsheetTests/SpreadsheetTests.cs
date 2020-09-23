@@ -1,9 +1,8 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SS;
-
-
-
-
+using SpreadsheetUtilities;
+using Microsoft.VisualStudio.TestPlatform.CoreUtilities.Extensions;
+using System.Collections.Generic;
 
 namespace SpreadsheetTests
 {
@@ -25,22 +24,34 @@ namespace SpreadsheetTests
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// list {A1, B1, C1} is returned.
         /// </summary>
-        [TestMethod]
-        public void TestSetCellContents()
+        [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(CircularException))]
+        public void SetCellContentsFormulaCircularexception()
         {
-            //AbstractClassSpreadsheet s = new Spreadsheet();
-            s.SetCellContents();
+            Spreadsheet s = new Spreadsheet();
+            Formula f = new Formula("c1 + b1");
+            s.SetCellContents("c1", f);
         }
-
         /// <summary>
         /// Enumerates the names of all the non-empty cells in the spreadsheet.
         /// </summary>
         [TestMethod]
-        public void GetNamesOfAllEmptyCells()
+        public void GetNamesOfAllNonemptyCells()
         {
             AbstractSpreadsheet s = new Spreadsheet();
-            
-            
+            s.SetCellContents("a1", 1.0);
+            s.SetCellContents("b1", 2.0);
+            s.SetCellContents("c1", 3.0);
+            List<string> actualcells = new List<string>();
+            foreach (string name in s.GetNamesOfAllNonemptyCells())
+            {
+                actualcells.Add(name);
+            }
+            List<string> expectedcells = new List<string>();
+            expectedcells.Add("a1");
+            expectedcells.Add("b1");
+            expectedcells.Add("c1");
+            Assert.IsTrue(actualcells.ToString().Equals(expectedcells.ToString()));
         }
     }
 }
