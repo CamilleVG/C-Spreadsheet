@@ -56,20 +56,21 @@ namespace SS
     public class Spreadsheet : AbstractSpreadsheet
     {
         private DependencyGraph dg;
-        private Dictionary<string, Cell> spreadsheet = new Dictionary<string, Cell>();
+        private Dictionary<string, Cell> spreadsheet; 
+        private Func<string, bool> IsValidName;
 
-        private static Func<string, bool> IsValidName;
-        
         /// <summary>
         /// Constructer creates an empty spreadsheet
         /// </summary>
         public Spreadsheet()
         {
             dg = new DependencyGraph();
+            spreadsheet = new Dictionary<string, Cell>();
 
             String varPattern = @"[a-zA-Z_](?: [a-zA-Z_]|\d)*";
             IsValidName = x => Regex.IsMatch(x, varPattern);
-    }
+        }
+
         /// <summary>
         /// If name is null or invalid, throws an InvalidNameException.
         /// 
@@ -188,17 +189,13 @@ namespace SS
             {
                 throw new ArgumentNullException();
             }
-            if (name is null || !IsValidName(name))
+            if (name is null)
             {
                 throw new InvalidNameException();
             }
-            try
+            if (!IsValidName(name))
             {
-                GetCellsToRecalculate(name); //might need a try/catch statement
-            }
-            catch (CircularException)
-            {
-                throw new CircularException();
+                throw new InvalidNameException();
             }
             try
             {
@@ -213,11 +210,24 @@ namespace SS
                 {
                     Dependents.Add(dependent);
                 }
+                 Object obj = GetCellsToRecalculate(name);
                 return Dependents;
-            }
-            catch
+            }  
+            catch (Exception e)
             {
-                throw new NotImplementedException();
+                    if (e is CircularException)
+                    {
+                        spreadsheet.Remove(name);
+                    foreach (string dependee in formula.GetVariables())
+                    {
+                        dg.RemoveDependency(dependee, name);
+                    }
+                        throw new CircularException();
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
             }
         }
         /// <summary>
@@ -246,7 +256,6 @@ namespace SS
                     yield return n;
                 }
             }
-            
         }
 
 
@@ -259,35 +268,35 @@ namespace SS
         /// Returns a double or throws ArgumentException
         /// </summary>
 
-        private double Lookup(string name)
-        {
-            if (spreadsheet[name].Contents is double)
-            {
-                return (double) spreadsheet[name].Contents;
-            }
-            if (spreadsheet[name].Contents is string)
-            {
-                throw new ArgumentException("Variable is not a number.");
-            }
-            else if (spreadsheet[name].Contents is Formula)
-            {
-                Func<string, double> lkp = x => Lookup(x);
-                Object obj = ((Formula)spreadsheet[name].Contents).Evaluate(lkp);
-                if (obj is double)
-                {
-                    return (Double)obj;
-                }
-            }
+        //private double Lookup(string name)
+        //{
+        //    if (spreadsheet[name].Contents is double)
+        //    {
+        //        return (double) spreadsheet[name].Contents;
+        //    }
+        //    if (spreadsheet[name].Contents is string)
+        //    {
+        //        throw new ArgumentException("Variable is not a number.");
+        //    }
+        //    else if (spreadsheet[name].Contents is Formula)
+        //    {
+        //        Func<string, double> lkp = x => Lookup(x);
+        //        Object obj = ((Formula)spreadsheet[name].Contents).Evaluate(lkp);
+        //        if (obj is double)
+        //        {
+        //            return (Double)obj;
+        //        }
+        //    }
 
-            else
-            {
+        //    else
+        //    {
                 
-                foreach(string var in dg.GetDependees(name))
-                {
-                    Lookup(var);
-                }
-            }
-            return 2.0;
-        }
+        //        foreach(string var in dg.GetDependees(name))
+        //        {
+        //            Lookup(var);
+        //        }
+        //    }
+        //    return 2.0;
+        //}
     }
 }

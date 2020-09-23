@@ -326,7 +326,6 @@ namespace SpreadsheetUtilities
         {
             try
             {
-                
                 findVarValue = lookup;
                 string exp = this.ToString();
 
