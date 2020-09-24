@@ -111,7 +111,7 @@ namespace SS
                 }
             }
         }
-        
+
         /// <summary>
         /// If name is null or invalid, throws an InvalidNameException.
         /// 
@@ -128,22 +128,22 @@ namespace SS
             {
                 throw new InvalidNameException();
             }
-            try
+            if (spreadsheet.ContainsKey(name))
+            {
+                spreadsheet[name].SetContents(number);
+            }
+            else
             {
                 Cell cell = new Cell(number);
                 spreadsheet.Add(name, cell);
-                IList<string> Dependents = new List<string>();
-                foreach (string dependent in dg.GetDependents(name))
-                {
-                    Dependents.Add(dependent);
-                }
-                return Dependents;
             }
-            catch
+            IList<string> Dependents = new List<string>();
+            foreach (string dependent in dg.GetDependents(name))
             {
-                throw new NotImplementedException();
+                Dependents.Add(dependent);
             }
-                
+            return Dependents;
+
         }
 
         /// <summary>
@@ -168,22 +168,28 @@ namespace SS
             {
                 throw new InvalidNameException();
             }
-            try
+
+
+            if (!(string.IsNullOrWhiteSpace(text) || string.IsNullOrEmpty(text)))
             {
-                Cell cell = new Cell(text);
-                spreadsheet.Add(name, cell);
-                IList<string> Dependents = new List<string>();
-                foreach(string n in GetCellsToRecalculate(name))
+                if (spreadsheet.ContainsKey(name))
                 {
-                    Dependents.Add(n);
+                    spreadsheet[name].SetContents(text);
                 }
-                return Dependents;
+                else
+                {
+                    Cell cell = new Cell(text);
+                    spreadsheet.Add(name, cell);
+                }
             }
-            catch
+            IList<string> Dependents = new List<string>();
+            foreach (string n in GetCellsToRecalculate(name))
             {
-                throw new NotImplementedException();
+                Dependents.Add(n);
             }
+            return Dependents;
         }
+
 
         /// <summary>
         /// If the formula parameter is null, throws an ArgumentNullException.
@@ -215,8 +221,15 @@ namespace SS
             }
             try
             {
-                Cell cell = new Cell(formula);
-                spreadsheet.Add(name, cell);
+                if (spreadsheet.ContainsKey(name))
+                {
+                    spreadsheet[name].SetContents(formula);
+                }
+                else
+                {
+                    Cell cell = new Cell(formula);
+                    spreadsheet.Add(name, cell);
+                }
                 foreach (string dependee in formula.GetVariables())
                 {
                     dg.AddDependency(dependee, name);
@@ -228,22 +241,15 @@ namespace SS
                 }
                 Object obj = GetCellsToRecalculate(name);
                 return Dependents;
-            }  
-            catch (Exception e)
+            }
+            catch
             {
-                    if (e is CircularException)
-                    {
-                        spreadsheet.Remove(name);
-                    foreach (string dependee in formula.GetVariables())
-                    {
-                        dg.RemoveDependency(dependee, name);
-                    }
-                        throw new CircularException();
-                    }
-                    else
-                    {
-                        throw new NotImplementedException();
-                    }
+                spreadsheet.Remove(name);
+                foreach (string dependee in formula.GetVariables())
+                {
+                    dg.RemoveDependency(dependee, name);
+                }
+                throw new CircularException();
             }
         }
 

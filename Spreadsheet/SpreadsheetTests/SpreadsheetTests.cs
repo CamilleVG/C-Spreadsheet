@@ -1,3 +1,5 @@
+///Written by Camille van Ginkel for PS4 assignment in CS 3500, September 2020
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SS;
 using SpreadsheetUtilities;
@@ -101,6 +103,20 @@ namespace SpreadsheetTests
         }
 
         /// <summary>
+        /// SetCellContents(string name, double number) returns list
+        /// If the cell already had previously been set, it changes the current set contents.  
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        public void SetCellContentsDoubleAfterCellIsAlreadySet()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetCellContents("a1", 2.0);
+            s.SetCellContents("a1", 10.0);
+            Assert.IsTrue(s.GetCellContents("a1").Equals(10.0));
+            Assert.IsTrue(s.GetCellContents("a1") is double);
+        }
+
+        /// <summary>
         /// SetCellContents(string name, double num);
         /// The contents of the named cell becomes number.  The method returns a
         /// list consisting of name plus the names of all other cells whose value depends, 
@@ -161,6 +177,37 @@ namespace SpreadsheetTests
             Spreadsheet s = new Spreadsheet();
             string name = "#1!";
             s.SetCellContents(name, "Title");
+        }
+
+        /// <summary>
+        /// SetCellContents(string name, string text) returns list
+        /// If the string given is empty of whitespace, that cell is considered empty
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        public void SetCellContentsStringEmptyCell()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetCellContents("a1", "");
+            s.SetCellContents("b1", "         ");
+            List<string> actualList = new List<string>();
+            foreach (string n in s.GetNamesOfAllNonemptyCells())
+            {
+                actualList.Add(n);
+            }
+            Assert.IsTrue(actualList.Count == 0);
+        }
+
+        /// <summary>
+        /// SetCellContents(string name, string text) returns list
+        /// If the cell already had previously been set, it changes the current set contents.  
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        public void SetCellContentsStringAfterCellIsAlreadySet()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetCellContents("a1", "Title");
+            s.SetCellContents("a1", "New Title");
+            Assert.IsTrue(s.GetCellContents("a1").Equals("New Title"));
         }
 
         /// <summary>
@@ -255,10 +302,20 @@ namespace SpreadsheetTests
             s.SetCellContents("b1", B1);
             Formula C1 = new Formula("b1+1");
             s.SetCellContents("c1", C1);
-            foreach (string name in s.GetNamesOfAllNonemptyCells())
-            {
-                Assert.IsTrue(name.Equals("b1"));
-            }
+        }
+
+        /// <summary>
+        /// SetCellContents(string name, double number) returns list
+        /// If the cell already had previously been set, it changes the current set contents.  
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        public void SetCellContentsFormulaAfterCellIsAlreadySet()
+        {
+            Spreadsheet s = new Spreadsheet();
+            Formula actual = new Formula("40/2");
+            s.SetCellContents("a1", new Formula("2+2"));
+            s.SetCellContents("a1", actual);
+            Assert.IsTrue(s.GetCellContents("a1").Equals(actual));
         }
 
         /// <summary>
