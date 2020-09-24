@@ -1,16 +1,15 @@
-﻿
+﻿/// Written by Camille van Ginkel for PS4 assignment for CS 3500, September 2020
+/// Implements AbstractSpreadsheet interface written by Joe Zachary for CS 3500, September 2013
+
 using SpreadsheetUtilities;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SS
 {
     /// <summary>
-    /// An AbstractSpreadsheet object represents the state of a simple spreadsheet.  A 
+    /// A Spreadsheet object represents the state of a simple spreadsheet.  A 
     /// spreadsheet consists of an infinite number of named cells.
     /// 
     /// A string is a valid cell name if and only if:
@@ -55,12 +54,26 @@ namespace SS
 
     public class Spreadsheet : AbstractSpreadsheet
     {
+        /// <summary>
+        /// spreadsheet maps the name of a cell to a Cell object--which holds the value and contents of a cell.
+        /// It only maps cells whose contents have been set.  It does not hold they keys of empty cells.
+        /// </summary>
+        private Dictionary<string, Cell> spreadsheet;
+
+        /// <summary>
+        /// dg is a dependency graph that tracks the dependencies of the non-empty cells in spreadsheet.
+        /// Every time a cell's contents is set to a formula with variables, dependencies are added to dg.
+        /// </summary>
         private DependencyGraph dg;
-        private Dictionary<string, Cell> spreadsheet; 
+
+        /// <summary>
+        /// IsValidName determines whether a string name for a variable meets variable name format.
+        /// It does not determine whether the name of the cell is in spreadsheet.
+        /// </summary>
         private Func<string, bool> IsValidName;
 
         /// <summary>
-        /// Constructer creates an empty spreadsheet
+        /// Constructer creates an empty spreadsheet.
         /// </summary>
         public Spreadsheet()
         {
@@ -76,11 +89,12 @@ namespace SS
         /// 
         /// Otherwise, returns the contents (as opposed to the value) of the named cell.  The return
         /// value should be either a string, a double, or a Formula.
+        /// </summary>
         public override object GetCellContents(string name)
         {
-            if (name is null || IsValidName(name))
+            if (name is null || !IsValidName(name) || !spreadsheet.ContainsKey(name))
             {
-                throw new NotImplementedException();
+                throw new InvalidNameException();
             }
             return spreadsheet[name].Contents;
         }
@@ -131,6 +145,7 @@ namespace SS
             }
                 
         }
+
         /// <summary>
         /// If text is null, throws an ArgumentNullException.
         /// 
@@ -158,9 +173,9 @@ namespace SS
                 Cell cell = new Cell(text);
                 spreadsheet.Add(name, cell);
                 IList<string> Dependents = new List<string>();
-                foreach (string dependent in dg.GetDependents(name))
+                foreach(string n in GetCellsToRecalculate(name))
                 {
-                    Dependents.Add(dependent);
+                    Dependents.Add(n);
                 }
                 return Dependents;
             }
@@ -169,6 +184,7 @@ namespace SS
                 throw new NotImplementedException();
             }
         }
+
         /// <summary>
         /// If the formula parameter is null, throws an ArgumentNullException.
         /// 
@@ -210,7 +226,7 @@ namespace SS
                 {
                     Dependents.Add(dependent);
                 }
-                 Object obj = GetCellsToRecalculate(name);
+                Object obj = GetCellsToRecalculate(name);
                 return Dependents;
             }  
             catch (Exception e)
@@ -230,6 +246,7 @@ namespace SS
                     }
             }
         }
+
         /// <summary>
         /// Returns an enumeration, without duplicates, of the names of all cells whose
         /// values depend directly on the value of the named cell.  In other words, returns
@@ -258,45 +275,5 @@ namespace SS
             }
         }
 
-
-        /// <summary>
-        /// Given "x1" 
-        ///     If the cell "x1" is a double returns value
-        ///     If the cell "x1" is a string throws ArgumentException
-        ///     If the cell "x1" is a Formula. Evaluate formula
-        /// 
-        /// Returns a double or throws ArgumentException
-        /// </summary>
-
-        //private double Lookup(string name)
-        //{
-        //    if (spreadsheet[name].Contents is double)
-        //    {
-        //        return (double) spreadsheet[name].Contents;
-        //    }
-        //    if (spreadsheet[name].Contents is string)
-        //    {
-        //        throw new ArgumentException("Variable is not a number.");
-        //    }
-        //    else if (spreadsheet[name].Contents is Formula)
-        //    {
-        //        Func<string, double> lkp = x => Lookup(x);
-        //        Object obj = ((Formula)spreadsheet[name].Contents).Evaluate(lkp);
-        //        if (obj is double)
-        //        {
-        //            return (Double)obj;
-        //        }
-        //    }
-
-        //    else
-        //    {
-                
-        //        foreach(string var in dg.GetDependees(name))
-        //        {
-        //            Lookup(var);
-        //        }
-        //    }
-        //    return 2.0;
-        //}
     }
 }
