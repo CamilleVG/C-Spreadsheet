@@ -1,79 +1,40 @@
-﻿/// Written by Camille van Ginkel for PS4 assignment for CS 3500, September 2020
-/// Implements AbstractSpreadsheet interface written by Joe Zachary for CS 3500, September 2013
+﻿// Written by Camille van Ginkel for PS4 assignment for CS 3500, September 2020
+// Implements AbstractSpreadsheet interface written by Joe Zachary for CS 3500, September 2013
 
 using SpreadsheetUtilities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace SS
 {
-    /// <summary>
-    /// A Spreadsheet object represents the state of a simple spreadsheet.  A 
-    /// spreadsheet consists of an infinite number of named cells.
-    /// 
-    /// A string is a valid cell name if and only if:
-    ///   (1) its first character is an underscore or a letter
-    ///   (2) its remaining characters (if any) are underscores and/or letters and/or digits
-    /// Note that this is the same as the definition of valid variable from the PS3 Formula class.
-    /// 
-    /// For example, "x", "_", "x2", "y_15", and "___" are all valid cell  names, but
-    /// "25", "2x", and "&" are not.  Cell names are case sensitive, so "x" and "X" are
-    /// different cell names.
-    /// 
-    /// A spreadsheet contains a cell corresponding to every possible cell name.  (This
-    /// means that a spreadsheet contains an infinite number of cells.)  In addition to 
-    /// a name, each cell has a contents and a value.  The distinction is important.
-    /// 
-    /// The contents of a cell can be (1) a string, (2) a double, or (3) a Formula.  If the
-    /// contents is an empty string, we say that the cell is empty.  (By analogy, the contents
-    /// of a cell in Excel is what is displayed on the editing line when the cell is selected.)
-    /// 
-    /// In a new spreadsheet, the contents of every cell is the empty string.
-    ///  
-    /// The value of a cell can be (1) a string, (2) a double, or (3) a FormulaError.  
-    /// (By analogy, the value of an Excel cell is what is displayed in that cell's position
-    /// in the grid.)
-    /// 
-    /// If a cell's contents is a string, its value is that string.
-    /// 
-    /// If a cell's contents is a double, its value is that double.
-    /// 
-    /// If a cell's contents is a Formula, its value is either a double or a FormulaError,
-    /// as reported by the Evaluate method of the Formula class.  The value of a Formula,
-    /// of course, can depend on the values of variables.  The value of a variable is the 
-    /// value of the spreadsheet cell it names (if that cell's value is a double) or 
-    /// is undefined (otherwise).
-    /// 
-    /// Spreadsheets are never allowed to contain a combination of Formulas that establish
-    /// a circular dependency.  A circular dependency exists when a cell depends on itself.
-    /// For example, suppose that A1 contains B1*2, B1 contains C1*2, and C1 contains A1*2.
-    /// A1 depends on B1, which depends on C1, which depends on A1.  That's a circular
-    /// dependency.
-    /// </summary>
-
+    /// <inheritdoc/>
     public class Spreadsheet : AbstractSpreadsheet
     {
         /// <summary>
-        /// spreadsheet maps the name of a cell to a Cell object--which holds the value and contents of a cell.
+        /// Maps the name of a cell to a Cell object.  The cell object holds the value and contents of a cell.
         /// It only maps cells whose contents have been set.  It does not hold they keys of empty cells.
         /// </summary>
-        private Dictionary<string, Cell> spreadsheet;
+        readonly Dictionary<string, Cell> spreadsheet;
 
         /// <summary>
-        /// dg is a dependency graph that tracks the dependencies of the non-empty cells in spreadsheet.
-        /// Every time a cell's contents is set to a formula with variables, dependencies are added to dg.
+        /// Tracks the dependencies of the non-empty cells in spreadsheet in a DAG.
+        /// If a cell "t" contents is set to a formula that contains a variable to another cell "s", then it is 
+        /// said that "t" depends on "s". 
         /// </summary>
-        private DependencyGraph dg;
+        readonly DependencyGraph dg;
+
+        ///<summary>
+        ///Determines whether a string name for a variable meets standard variable name format.
+        ///For example, "x", "_", "x2", "y_15", and "___" are all valid cell names, but
+        /// "25", "2x", and other symbols are not.  Cell names are case sensitive, so "x" and "X" are
+        /// different cell names.
+        ///</summary>
+        readonly Func<string, bool> IsValidName;
 
         /// <summary>
-        /// IsValidName determines whether a string name for a variable meets variable name format.
-        /// It does not determine whether the name of the cell is in spreadsheet.
-        /// </summary>
-        private Func<string, bool> IsValidName;
-
-        /// <summary>
-        /// Constructer creates an empty spreadsheet.
+        /// Constructor creates an empty spreadsheet.
         /// </summary>
         public Spreadsheet()
         {
@@ -90,6 +51,8 @@ namespace SS
         /// Otherwise, returns the contents (as opposed to the value) of the named cell.  The return
         /// value should be either a string, a double, or a Formula.
         /// </summary>
+        /// <param name="name">The name of the cell whose contents is needed.</param>
+        /// <returns>The contents that was input into the cell.</returns>
         public override object GetCellContents(string name)
         {
             if (name is null || !IsValidName(name) || !spreadsheet.ContainsKey(name))
@@ -98,6 +61,7 @@ namespace SS
             }
             return spreadsheet[name].Contents;
         }
+
         /// <summary>
         /// Enumerates the names of all the non-empty cells in the spreadsheet.
         /// </summary>
@@ -112,52 +76,46 @@ namespace SS
             }
         }
 
-        /// <summary>
-        /// If name is null or invalid, throws an InvalidNameException.
-        /// 
-        /// Otherwise, the contents of the named cell becomes number.  The method returns a
-        /// list consisting of name plus the names of all other cells whose value depends, 
-        /// directly or indirectly, on the named cell.
-        /// 
-        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
-        /// list {A1, B1, C1} is returned.
-        /// </summary>
+        /// <inheritdoc/>
+        /// <param name="name">The name of the cell being changed</param>
+        /// <param name="number">The contents that is input into the cell</param>
+        /// <returns>A list of strings containing the names of all the cells that directly or indirectly depend on the value of 
+        /// the cell being changed.  The cells are listed in the order that they need to be recalculated.</returns>
+        /// <exception cref="InvalidNameException">Is thrown if name is null or invalid.</exception>
         public override IList<string> SetCellContents(string name, double number)
         {
             if (name is null || !IsValidName(name))
             {
                 throw new InvalidNameException();
             }
-            if (spreadsheet.ContainsKey(name))
+
+            if (spreadsheet.ContainsKey(name)) //If the spreadsheet has a the named non-empty cell, edit contents of cell
             {
-                spreadsheet[name].SetContents(number);
+                spreadsheet[name].SetContents(number); 
             }
-            else
+            else //Otherwise, create a new cell
             {
                 Cell cell = new Cell(number);
                 spreadsheet.Add(name, cell);
             }
+
+            //Return list of all direct and indirect dependents
             IList<string> Dependents = new List<string>();
-            foreach (string dependent in dg.GetDependents(name))
+            foreach (string dependent in GetCellsToRecalculate(name)) 
             {
                 Dependents.Add(dependent);
             }
-            return Dependents;
-
+            return Dependents; 
         }
 
-        /// <summary>
-        /// If text is null, throws an ArgumentNullException.
-        /// 
-        /// Otherwise, if name is null or invalid, throws an InvalidNameException.
-        /// 
-        /// Otherwise, the contents of the named cell becomes text.  The method returns a
-        /// list consisting of name plus the names of all other cells whose value depends, 
-        /// directly or indirectly, on the named cell.
-        /// 
-        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
-        /// list {A1, B1, C1} is returned.
-        /// </summary>
+
+        /// <inheritdoc/>
+        /// <param name="name">The name of the cell whose contents is being set.</param>
+        /// <param name="text">The string contents being input into the cell.</param>
+        /// <returns>A list of strings containing the names of all the cells that directly or indirectly depend on the value of 
+        /// the cell being changed.  The cells are listed in the order that they need to be recalculated.</returns>
+        /// <exception cref="InvalidNameException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
         public override IList<string> SetCellContents(string name, string text)
         {
             if (text is null)
@@ -169,7 +127,7 @@ namespace SS
                 throw new InvalidNameException();
             }
 
-
+            //If the input text is empty, the cell is considered empty.  Thus do not create cell.
             if (!(string.IsNullOrWhiteSpace(text) || string.IsNullOrEmpty(text)))
             {
                 if (spreadsheet.ContainsKey(name))
@@ -182,6 +140,7 @@ namespace SS
                     spreadsheet.Add(name, cell);
                 }
             }
+            //Return list of direct and indirect dependents in the order that they need to be recalulated.
             IList<string> Dependents = new List<string>();
             foreach (string n in GetCellsToRecalculate(name))
             {
@@ -191,59 +150,55 @@ namespace SS
         }
 
 
-        /// <summary>
-        /// If the formula parameter is null, throws an ArgumentNullException.
-        /// 
-        /// Otherwise, if name is null or invalid, throws an InvalidNameException.
-        /// 
-        /// Otherwise, if changing the contents of the named cell to be the formula would cause a 
-        /// circular dependency, throws a CircularException, and no change is made to the spreadsheet.
-        /// 
-        /// Otherwise, the contents of the named cell becomes formula.  The method returns a
-        /// list consisting of name plus the names of all other cells whose value depends,
-        /// directly or indirectly, on the named cell.
-        /// 
-        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
-        /// list {A1, B1, C1} is returned.
+        /// <inheritdoc/>
+        /// /// <param name="name">The name of the cell whose contents is being set.</param>
+        /// <param name="formula">The formula contents being input into the cell.</param>
+        /// <returns>A list of strings containing the names of all the cells that directly or indirectly depend on the value of 
+        /// the cell being changed.  The cells are listed in the order that they need to be recalculated.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="InvalidNameException"></exception>
         public override IList<string> SetCellContents(string name, Formula formula)
         {
             if (formula is null)
             {
                 throw new ArgumentNullException();
             }
-            if (name is null)
-            {
-                throw new InvalidNameException();
-            }
-            if (!IsValidName(name))
+            if (name is null || !IsValidName(name))
             {
                 throw new InvalidNameException();
             }
             try
             {
+                //If the cell is non-empty, change the contents of the already existing cell object
                 if (spreadsheet.ContainsKey(name))
                 {
                     spreadsheet[name].SetContents(formula);
                 }
+                //Otherwise, add the cell to spreadsheet
                 else
                 {
                     Cell cell = new Cell(formula);
                     spreadsheet.Add(name, cell);
                 }
+                //Since the input is a formula, the cell could depend on other cells
+                //Update the dependency graph dg.
                 foreach (string dependee in formula.GetVariables())
                 {
+                    Debug.Assert(IsValidName(dependee));
                     dg.AddDependency(dependee, name);
                 }
+                //Return list of all dependent cells
+                //If GetCellsToRecalculate throws CircularException it is caught bellow
                 IList<string> Dependents = new List<string>();
-                foreach (string dependent in dg.GetDependents(name))
+                foreach (string dependent in GetCellsToRecalculate(name))
                 {
                     Dependents.Add(dependent);
                 }
-                Object obj = GetCellsToRecalculate(name);
                 return Dependents;
             }
             catch
             {
+                //If CicularException is caught, undo changes to spreadsheet
                 spreadsheet.Remove(name);
                 foreach (string dependee in formula.GetVariables())
                 {
@@ -253,25 +208,17 @@ namespace SS
             }
         }
 
-        /// <summary>
-        /// Returns an enumeration, without duplicates, of the names of all cells whose
-        /// values depend directly on the value of the named cell.  In other words, returns
-        /// an enumeration, without duplicates, of the names of all cells that contain
-        /// formulas containing name.
-        /// 
-        /// For example, suppose that
-        /// A1 contains 3
-        /// B1 contains the formula A1 * A1
-        /// C1 contains the formula B1 + A1
-        /// D1 contains the formula B1 - C1
-        /// The direct dependents of A1 are B1 and C1
-        /// </summary>
+        /// <inheritdoc/>
+        /// <param name="name">The name of the cell that is the dependee of all cells returned.</param>
+        /// <returns>Enumeration of direct dependents of given cell</returns>
         protected override IEnumerable<string> GetDirectDependents(string name)
         {
+            //If the cell does not have dependents, do not return anything
             if (!dg.HasDependents(name))
             {
                 yield break;
             }
+            //Otherwise, enumerate each dependent
             else
             {
                 foreach (String n in dg.GetDependents(name))

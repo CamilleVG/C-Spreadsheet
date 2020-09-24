@@ -130,7 +130,6 @@ namespace SpreadsheetUtilities
             else
             {
                 return new HashSet<string>();
-
             }
         }
 

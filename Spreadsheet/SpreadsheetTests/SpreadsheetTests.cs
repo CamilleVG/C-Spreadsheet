@@ -5,6 +5,7 @@ using SS;
 using SpreadsheetUtilities;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace SpreadsheetTests
 {
@@ -138,7 +139,7 @@ namespace SpreadsheetTests
             expectedDependents.Add("A1");
             expectedDependents.Add("B1");
             expectedDependents.Add("C1");
-            Assert.IsTrue(actualDependents.ToString().Equals(expectedDependents.ToString()));
+            Assert.IsTrue(actualDependents.SequenceEqual(expectedDependents));
         }
         /// <summary>
         /// SetCellContents(string name, string text) returns list
@@ -232,7 +233,7 @@ namespace SpreadsheetTests
             expectedDependents.Add("a1");
             expectedDependents.Add("b1");
             expectedDependents.Add("c1");
-            Assert.IsTrue(actualDependents.ToString().Equals(expectedDependents.ToString()));
+            Assert.IsTrue(actualDependents.SequenceEqual(expectedDependents));
         }
 
         /// <summary>
@@ -341,7 +342,7 @@ namespace SpreadsheetTests
             expectedDependents.Add("A1");
             expectedDependents.Add("B1");
             expectedDependents.Add("C1");
-            Assert.IsTrue(actualDependents.ToString().Equals(expectedDependents.ToString()));
+            Assert.IsTrue(expectedDependents.SequenceEqual(actualDependents));
         }
         
         /// <summary>
@@ -363,7 +364,7 @@ namespace SpreadsheetTests
             expectedcells.Add("a1");
             expectedcells.Add("b1");
             expectedcells.Add("c1");
-            Assert.IsTrue(actualcells.ToString().Equals(expectedcells.ToString()));
+            Assert.IsTrue(actualcells.SequenceEqual(expectedcells));
         }
 
         /// <summary>

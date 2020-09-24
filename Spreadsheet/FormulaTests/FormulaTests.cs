@@ -290,7 +290,7 @@ namespace FormulaTests
             {
                 actualVariables.Add(var);
             }
-            Assert.IsTrue(expectedVariables.ToString().Equals(actualVariables.ToString()));
+            Assert.IsTrue(expectedVariables.SetEquals(actualVariables));
         }
         /// <summary>
         /// For example, if N is a method that converts all the letters in a string to upper case:
@@ -304,13 +304,13 @@ namespace FormulaTests
             Formula f = new Formula("x+X*z", s => s.ToUpper(), s => true);
             SortedSet<string> expectedVariables = new SortedSet<string>();
             expectedVariables.Add("X");
-            expectedVariables.Add("Z");
+            expectedVariables.Add("Z");//Z
             SortedSet<string> actualVariables = new SortedSet<string>();
             foreach (string var in f.GetVariables())
             {
                 actualVariables.Add(var);
             }
-            Assert.IsTrue(expectedVariables.ToString().Equals(actualVariables.ToString()));
+            Assert.IsTrue(expectedVariables.SetEquals(actualVariables));
         }
 
         /// For example, if N is a method that converts all the letters in a string to upper case:
@@ -329,7 +329,7 @@ namespace FormulaTests
             {
                 actualVariables.Add(var);
             }
-            Assert.IsTrue(expectedVariables.ToString().Equals(actualVariables.ToString()));
+            Assert.IsTrue(expectedVariables.SetEquals(actualVariables));
         }
 
         /// <summary>
