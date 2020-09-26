@@ -11,6 +11,7 @@ namespace Scratch
     {
         static void Main(string[] args)
         {
+            //Practicing Regex Expressions
             Console.WriteLine("Run Works!");
 
             String dollarPattern = "I saw ([0-9]|like, tons of) dogs today";
