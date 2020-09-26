@@ -40,7 +40,7 @@ namespace SS
         {
             dg = new DependencyGraph();
             spreadsheet = new Dictionary<string, Cell>();
-
+           
             String varPattern = @"[a-zA-Z_](?: [a-zA-Z_]|\d)*";
             IsValidName = x => Regex.IsMatch(x, varPattern);
         }

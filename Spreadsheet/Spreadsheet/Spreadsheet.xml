@@ -112,12 +112,9 @@
             an enumeration, without duplicates, of the names of all cells that contain
             formulas containing name.
             
-            For example, suppose that
-            A1 contains 3
-            B1 contains the formula A1 * A1
-            C1 contains the formula B1 + A1
-            D1 contains the formula B1 - C1
-            The direct dependents of A1 are B1 and C1
+            <para>For example, suppose that A1 contains 3, B1 contains the formula A1 * A1, C1 contains the formula B1 + A1,
+            D1 contains the formula B1 - C1.
+            The direct dependents of A1, are B1 and C1.</para>
             </summary>
         </member>
         <member name="M:SS.AbstractSpreadsheet.GetCellsToRecalculate(System.Collections.Generic.ISet{System.String})">
@@ -259,6 +256,8 @@
             Otherwise, returns the contents (as opposed to the value) of the named cell.  The return
             value should be either a string, a double, or a Formula.
             </summary>
+            <param name="name">The name of the cell whose contents is needed.</param>
+            <returns>The contents that was input into the cell.</returns>
         </member>
         <member name="M:SS.Spreadsheet.GetNamesOfAllNonemptyCells">
             <summary>
