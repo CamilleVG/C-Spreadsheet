@@ -5,6 +5,9 @@ using SpreadsheetUtilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.IO.IsolatedStorage;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 
 namespace SS
@@ -36,14 +39,41 @@ namespace SS
         /// <summary>
         /// Constructor creates an empty spreadsheet.
         /// </summary>
-        public Spreadsheet()
+        public Spreadsheet() : base(x=> true, x=> x, "default")
         {
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="isValid"></param>
+        /// <param name="normalize"></param>
+        /// <param name="version"></param>
+        public Spreadsheet(Func<string, bool> isValid, Func<string, string> normalize, string version) : base(isValid, normalize, version)
+        {
+            this.IsValid = isValid;
+            this.Normalize = normalize;
+            this.Version = version;
+
             dg = new DependencyGraph();
             spreadsheet = new Dictionary<string, Cell>();
-           
+
             String varPattern = @"[a-zA-Z_](?: [a-zA-Z_]|\d)*";
             IsValidName = x => Regex.IsMatch(x, varPattern);
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="thisWillBeFile"></param>
+        /// <param name="isValid"></param>
+        /// <param name="normalize"></param>
+        /// <param name="version"></param>
+        public Spreadsheet(String thisWillBeFile, Func<string, bool> isValid, Func<string, string> normalize, string version) : base(isValid, normalize, version)
+        {
+
+        }
+
+        public override bool Changed { get => throw new NotImplementedException(); protected set => throw new NotImplementedException(); }
 
         /// <summary>
         /// If name is null or invalid, throws an InvalidNameException.
@@ -62,6 +92,11 @@ namespace SS
             return spreadsheet[name].Contents;
         }
 
+        public override object GetCellValue(string name)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Enumerates the names of all the non-empty cells in the spreadsheet.
         /// </summary>
@@ -76,13 +111,23 @@ namespace SS
             }
         }
 
+        public override string GetSavedVersion(string filename)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Save(string filename)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc/>
         /// <param name="name">The name of the cell being changed</param>
         /// <param name="number">The contents that is input into the cell</param>
         /// <returns>A list of strings containing the names of all the cells that directly or indirectly depend on the value of 
         /// the cell being changed.  The cells are listed in the order that they need to be recalculated.</returns>
         /// <exception cref="InvalidNameException">Is thrown if name is null or invalid.</exception>
-        public override IList<string> SetCellContents(string name, double number)
+        protected override IList<string> SetCellContents(string name, double number)
         {
             if (name is null || !IsValidName(name))
             {
@@ -116,7 +161,7 @@ namespace SS
         /// the cell being changed.  The cells are listed in the order that they need to be recalculated.</returns>
         /// <exception cref="InvalidNameException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
-        public override IList<string> SetCellContents(string name, string text)
+        protected override IList<string> SetCellContents(string name, string text)
         {
             if (text is null)
             {
@@ -157,7 +202,7 @@ namespace SS
         /// the cell being changed.  The cells are listed in the order that they need to be recalculated.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidNameException"></exception>
-        public override IList<string> SetCellContents(string name, Formula formula)
+        protected override IList<string> SetCellContents(string name, Formula formula)
         {
             if (formula is null)
             {
@@ -206,6 +251,11 @@ namespace SS
                 }
                 throw new CircularException();
             }
+        }
+
+        public override IList<string> SetContentsOfCell(string name, string content)
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
