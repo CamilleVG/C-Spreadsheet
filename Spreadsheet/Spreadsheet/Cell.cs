@@ -50,25 +50,35 @@ namespace SS
         {
             contents = Contents;
             value = Contents;
-
         }
 
         /// <summary>
         /// Instantiates a cell with type Formula input.
         /// </summary>
         /// <param name="Contents">The formula that was input into the cell.</param>
-        public Cell(Formula Contents)
+        /// <param name="Lookup"> Lookup method to return the value of a cell(variable) is defined in spreadsheet</param>
+        public Cell(Formula Contents, Func<string, double> Lookup)
         {
             contents = Contents;
-            value = null; //For now the value of a Formula is null
-                          //Need to define lookup method for formula.Evaluate()
+            value = Contents.Evaluate(Lookup);
         }
+
+        
+
         /// <summary>
         /// Returns the input of a cell.
         /// </summary>
         public object Contents
         {
             get { return contents; }
+        }
+
+        /// <summary>
+        /// Returns the input of a cell.
+        /// </summary>
+        public object Value
+        {
+            get { return value; }
         }
 
         /// <summary>
@@ -91,5 +101,7 @@ namespace SS
                 value = null;
             }
         }
+
+
     }
 }

@@ -59,15 +59,9 @@ namespace SpreadsheetUtilities
         /// 
 
         private string theFormula;  //holds passed in formula from  constructor
+        private string FormulaToString;  //holds the string with normalized tokens
         private Func<string, string> normalizer; //holds passed in normalize method
         private Func<string, bool> validator; //holds passed in IsValid method
-
-        private Func<string, bool> IsVariable;  //determines whether a token is a variable
-        private Func<string, bool> IsLeftParenthesis; //determines whether a token is a '('
-        private Func<string, bool> IsRightParenthesis; //determines whether a token is a ')'
-        private Func<string, bool> IsOperator; //determines whether a token is +, -, *, or \
-        private Func<string, bool> IsRealNumber; //determines whether a token is a real number or number in scientfic notation
-        private double result; //passed in reference for IsRealNumber => TryDoubleParse(out result)
 
         //Instance variables copied from Evaluator class
         private static Func<string, double> findVarValue;
@@ -106,31 +100,16 @@ namespace SpreadsheetUtilities
             this.normalizer = normalize;
             this.validator = isValid;
 
-            String varPattern = @"[a-zA-Z_](?: [a-zA-Z_]|\d)*";
-            IsVariable = x => Regex.IsMatch(x, varPattern);
-
-            String lpPattern = @"\(";
-            IsLeftParenthesis = x => Regex.IsMatch(x, lpPattern);
-
-            String rpPattern = @"\)";
-            IsRightParenthesis = x => Regex.IsMatch(x, rpPattern);
-
-            String opPattern = @"[\+\-*/]";
-            IsOperator = x => Regex.IsMatch(x, opPattern);
-
-            IsRealNumber = x => Double.TryParse(x, out result);
-            //String doublePattern = @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?";
-            //IsRealNumber = x => Regex.IsMatch(x, doublePattern); 
-
-
             /// One Token Rule:  There must be at least one token
             if (string.IsNullOrWhiteSpace(formula))
             {
                 throw new FormulaFormatException("Formula is empty.  Input valid formula.");
             }
+            IList<string> normalizedTokens = new List<string>(); // for Evaluate method
+
 
             /// Parsing:  after splitting formula into tokens, valid tokens are only (, ), +, -, *, /, variables, and decimal real numbers (including scientific notation)
-            string temp = Parsing();
+            FormulaToString = Parsing();
 
             /// Right Parentheses Rule:  When reading the tokens from left to right, at no point should the number of closing parentheses seen so far be greater than the number on opening parentheses seen so far.
             /// Balanced Parentheses Rule:  The total number of opening parentheses must be equal to the total number of closing parentheses
@@ -146,7 +125,38 @@ namespace SpreadsheetUtilities
             /// Extra Following Rule:  Any token that immediately follows a number a variable or a closing parenthesis must be either an operator or a closing parenthesis
             ExtraFollowingRule();
         }
+        private bool IsVariable(string token)
+        {
+            String varPattern = @"[a-zA-Z_](?: [a-zA-Z_]|\d)*";  //determines whether a token is a variable
+            return  Regex.IsMatch(token, varPattern);
+        }
+        private bool IsLeftParenthesis(String token)
+        {
+            String lpPattern = @"\("; //determines whether a token is a '('
+            bool result = Regex.IsMatch(token, lpPattern);
+            return result;
+        }
+        private bool IsRightParenthesis(String token)
+        {
+            String rpPattern = @"\)"; //determines whether a token is a ')'
+            bool result = Regex.IsMatch(token, rpPattern);
+            return result;
+        }
 
+        private bool IsOperator(String token)
+        {
+
+            String opPattern = @"[\+\-*/]"; //determines whether a token is +, -, *, or \
+            bool result = Regex.IsMatch(token, opPattern);
+            return result;
+        }
+
+        private bool IsRealNumber(String token)
+        {
+            double result; //determines whether a token is a real number or number in scientfic notation
+            bool isNum = Double.TryParse(token, out result);
+            return isNum;
+        }
 
         /// <sumary>
         /// Parsing:  after splitting formula into tokens, valid tokens are 
@@ -571,7 +581,7 @@ namespace SpreadsheetUtilities
     public override string ToString()
     {
             //Parsing() builds string while enumerating through GetTokens and normalizes variables
-            string Result = Parsing();
+            string Result = FormulaToString;
             return Result;
     }
 

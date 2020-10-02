@@ -13,20 +13,123 @@ namespace SpreadsheetTests
     [TestClass]
     public class SpreadsheetTests 
     {
-        
-       
 
         /// <summary>
-        /// GetCellContents(string name) returns object;
+        /// GetCellValue(string name)
+        /// If the value of the cell is a double, returns double
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        public void SaveInvalidFilePathSpreadsheetReadWriteException()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "4.0");
+            double actual = (double) s.GetCellValue("a1");
+            Assert.IsTrue(actual == 4.0);
+        }
+
+
+
+        /// <summary>
+        /// GetCellValue(string name)
+        /// If the contents of the cell is a formula, returns the evaluated formula.  
+        /// If it is a valid formula, returns double
+        /// </summary>
+        [TestMethod()]//, Timeout(5000)]
+        public void GetCellValueOfFormula()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("b1", "5.0");
+            s.SetContentsOfCell("c1", "3.0");
+            s.SetContentsOfCell("a1", "=b1 + c1");
+            double actual = (double)s.GetCellValue("a1");
+            Assert.IsTrue(actual == 8.0);
+        }
+
+        /// <summary>
+        /// GetCellValue(string name)
+        /// If the contents of the cell is a formula, returns the evaluated formula.  
+        /// If it is a valid formula, returns double
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        public void GetCellValueOfFormulaRecursion()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("b1", "=c1+1.0");
+            s.SetContentsOfCell("c1", "=d1+ 2.0");
+            s.SetContentsOfCell("d1", "=e1");
+            s.SetContentsOfCell("e1", "=f1*2");
+            s.SetContentsOfCell("f1", "=3.0");
+            s.SetContentsOfCell("a1", "=b1 + 2"); //9.0 +2 == 11
+            double actual = (double)s.GetCellValue("a1");
+            Assert.IsTrue(actual == 11.0);
+        }
+
+        /// <summary>
+        /// GetCellValue(string name)
+        /// If the contents of the cell is a formula, returns the evaluated formula.  
+        /// If it is a valid formula, returns double
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        public void GetCellValueOfFormulaReturnsFormulaError()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("b1", "=c1+1.0");
+            s.SetContentsOfCell("c1", "I'm a string");
+            s.SetContentsOfCell("a1", "=b1 + c1"); //= 9.0 + 8.0 = 17.0
+            object actual = s.GetCellValue("a1");
+            Assert.IsTrue(actual is FormulaError);
+        }
+
+        /// <summary>
+        /// Save(string)
+        /// </summary>
+        /// 
+        /// <summary>
+        /// Writes the contents of this spreadsheet to the named file using an XML format.
+        /// The XML elements should be structured as follows:
+        /// 
+        /// <spreadsheet version="version information goes here">
+        /// 
+        /// <cell>
+        /// <name>cell name goes here</name>
+        /// <contents>cell contents goes here</contents>    
+        /// </cell>
+        /// 
+        /// </spreadsheet>
+        /// 
+        /// There should be one cell element for each non-empty cell in the spreadsheet.  
+        /// If the cell contains a string, it should be written as the contents.  
+        /// If the cell contains a double d, d.ToString() should be written as the contents.  
+        /// If the cell contains a Formula f, f.ToString() with "=" prepended should be written as the contents.
+        /// 
+        /// If there are any problems opening, writing, or closing the file, the method should throw a
+        /// SpreadsheetReadWriteException with an explanatory message.
+        /// </summary>
+
+        /// <summary>
+        /// Save(string name)
         /// If name is null, throws an InvalidNameException.
         /// </summary>
         [TestMethod(), Timeout(5000)]
-        [ExpectedException(typeof(InvalidNameException))]
-        public void GetCellContentsNullNameException()
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void FixMe()
         {
             Spreadsheet s = new Spreadsheet();
-            String name = null;
-            s.GetCellContents(name);
+            String filename = "/missing/save.xml";
+            s.Save(filename);
+        }
+
+        /// <summary>
+        /// Save(string filename)
+        /// If name is null, there should be a reading file error.
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void SaveReadException()
+        {
+            Spreadsheet s = new Spreadsheet();
+            String filename = null;
+            s.Save(filename);
         }
 
         /// <summary>
@@ -63,22 +166,23 @@ namespace SpreadsheetTests
         public void GetCellContentsReturnsDouble()
         {
             Spreadsheet s = new Spreadsheet();
-            s.SetCellContents("a1", 2.0);
+            s.SetContentsOfCell("a1", "2.0");
             double d = (double)s.GetCellContents("a1");
         }
         [TestMethod(), Timeout(5000)]
         public void GetCellContentsReturnsString()
         {
             Spreadsheet s = new Spreadsheet();
-            s.SetCellContents("a1", "Title");
+            s.SetContentsOfCell("a1", "Title");
             string contents = (string) s.GetCellContents("a1");
         }
         [TestMethod(), Timeout(5000)]
         public void GetCellContentsReturnsFormula()
         {
             Spreadsheet s = new Spreadsheet();
-            s.SetCellContents("a1", new Formula("2+3"));
+            s.SetContentsOfCell("a1", "=2+3");
             Formula contents = (Formula)s.GetCellContents("a1");
+            Assert.IsTrue(contents.Equals(new Formula("2+3")));
         }
 
         /// <summary>
@@ -91,7 +195,7 @@ namespace SpreadsheetTests
         {
             Spreadsheet s = new Spreadsheet();
             String name = null;
-            s.SetCellContents(name, 2.0);
+            s.SetContentsOfCell(name, "2.0  ");
         }
 
         /// <summary>
@@ -104,7 +208,7 @@ namespace SpreadsheetTests
         {
             Spreadsheet s = new Spreadsheet();
             String name = "%00";
-            s.SetCellContents(name, 2.0);
+            s.SetContentsOfCell(name," 2.0");
         }
 
         /// <summary>
@@ -115,8 +219,8 @@ namespace SpreadsheetTests
         public void SetCellContentsDoubleAfterCellIsAlreadySet()
         {
             Spreadsheet s = new Spreadsheet();
-            s.SetCellContents("a1", 2.0);
-            s.SetCellContents("a1", 10.0);
+            s.SetContentsOfCell("a1", "2.0");
+            s.SetContentsOfCell("a1", "10.0");
             Assert.IsTrue(s.GetCellContents("a1").Equals(10.0));
             Assert.IsTrue(s.GetCellContents("a1") is double);
         }
@@ -130,21 +234,21 @@ namespace SpreadsheetTests
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// list {A1, B1, C1} is returned.
         /// </summary>
-        [TestMethod(), Timeout(5000)]
-        public void SetCellContentsDoubleCorrectImplementation()
-        {
-            Spreadsheet s = new Spreadsheet();
-            Formula B1 = new Formula("A1*2");
-            Formula C1 = new Formula("B1+A1");
-            s.SetCellContents("B1", B1);
-            s.SetCellContents("C1", C1);
-            IList<string> actualDependents = s.SetCellContents("A1", 2.0);
-            IList<string> expectedDependents = new List<string>();
-            expectedDependents.Add("A1");
-            expectedDependents.Add("B1");
-            expectedDependents.Add("C1");
-            Assert.IsTrue(actualDependents.SequenceEqual(expectedDependents));
-        }
+        //[TestMethod(), Timeout(5000)]
+        //public void SetCellContentsDoubleCorrectImplementation()
+        //{
+        //    Spreadsheet s = new Spreadsheet();
+        //    Formula B1 = new Formula("A1*2");
+        //    Formula C1 = new Formula("B1+A1");
+        //    s.SetContentsOfCell("B1", B1);
+        //    s.SetCellContents("C1", C1);
+        //    IList<string> actualDependents = s.SetCellContents("A1", 2.0);
+        //    IList<string> expectedDependents = new List<string>();
+        //    expectedDependents.Add("A1");
+        //    expectedDependents.Add("B1");
+        //    expectedDependents.Add("C1");
+        //    Assert.IsTrue(actualDependents.SequenceEqual(expectedDependents));
+        //}
         /// <summary>
         /// SetCellContents(string name, string text) returns list
         /// If text is null, throws an ArgumentNullException.
@@ -155,7 +259,7 @@ namespace SpreadsheetTests
         {
             Spreadsheet s = new Spreadsheet();
             string text = null;
-            s.SetCellContents("a1", text);
+            s.SetContentsOfCell("a1", text);
         }
 
         /// <summary>
@@ -168,7 +272,7 @@ namespace SpreadsheetTests
         {
             Spreadsheet s = new Spreadsheet();
             string name = null;
-            s.SetCellContents(name, "Title");
+            s.SetContentsOfCell(name, "Title");
         }
 
         /// <summary>
@@ -181,7 +285,7 @@ namespace SpreadsheetTests
         {
             Spreadsheet s = new Spreadsheet();
             string name = "#1!";
-            s.SetCellContents(name, "Title");
+            s.SetContentsOfCell(name, "Title");
         }
 
         /// <summary>
@@ -192,8 +296,8 @@ namespace SpreadsheetTests
         public void SetCellContentsStringEmptyCell()
         {
             Spreadsheet s = new Spreadsheet();
-            s.SetCellContents("a1", "");
-            s.SetCellContents("b1", "         ");
+            s.SetContentsOfCell("a1", "");
+            s.SetContentsOfCell("b1", "         ");
             List<string> actualList = new List<string>();
             foreach (string n in s.GetNamesOfAllNonemptyCells())
             {
@@ -206,12 +310,12 @@ namespace SpreadsheetTests
         /// SetCellContents(string name, string text) returns list
         /// If the cell already had previously been set, it changes the current set contents.  
         /// </summary>
-        [TestMethod(), Timeout(5000)]
+        [TestMethod()]//, Timeout(5000)]
         public void SetCellContentsStringAfterCellIsAlreadySet()
         {
             Spreadsheet s = new Spreadsheet();
-            s.SetCellContents("a1", "Title");
-            s.SetCellContents("a1", "New Title");
+            s.SetContentsOfCell("a1", "Title");
+            s.SetContentsOfCell("a1", "New Title");
             Assert.IsTrue(s.GetCellContents("a1").Equals("New Title"));
         }
 
@@ -224,21 +328,21 @@ namespace SpreadsheetTests
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// list {A1, B1, C1} is returned.
         /// </summary>
-        [TestMethod(), Timeout(5000)]
-        public void SetCellContentsStringCorrectImplementation()
-        {
-            Spreadsheet s = new Spreadsheet();
-            s.SetCellContents("c1", new Formula("b1+2"));
-            s.SetCellContents("b1", new Formula("a1+2"));
-            string name = "a1";
-            IList<string> actualDependents = s.SetCellContents(name, "Title");
-            Assert.IsTrue(s.GetCellContents("a1").Equals("Title"));
-            IList<string> expectedDependents = new List<string>();
-            expectedDependents.Add("a1");
-            expectedDependents.Add("b1");
-            expectedDependents.Add("c1");
-            Assert.IsTrue(actualDependents.SequenceEqual(expectedDependents));
-        }
+        //[TestMethod(), Timeout(5000)]
+        //public void SetCellContentsStringCorrectImplementation()
+        //{
+        //    Spreadsheet s = new Spreadsheet();
+        //    s.SetCellContents("c1", new Formula("b1+2"));
+        //    s.SetCellContents("b1", new Formula("a1+2"));
+        //    string name = "a1";
+        //    IList<string> actualDependents = s.SetCellContents(name, "Title");
+        //    Assert.IsTrue(s.GetCellContents("a1").Equals("Title"));
+        //    IList<string> expectedDependents = new List<string>();
+        //    expectedDependents.Add("a1");
+        //    expectedDependents.Add("b1");
+        //    expectedDependents.Add("c1");
+        //    Assert.IsTrue(actualDependents.SequenceEqual(expectedDependents));
+        //}
 
         /// <summary>
         /// SetCellContents(string name, Formula f)
@@ -248,9 +352,9 @@ namespace SpreadsheetTests
         [ExpectedException(typeof(ArgumentNullException))]
         public void SetCellContentsFormulaArgumentNullException()
         {
-            Formula f = null;
+            String f = null;
             Spreadsheet s = new Spreadsheet();
-            s.SetCellContents("a1", f);
+            s.SetContentsOfCell("a1", f);
         }
 
         
@@ -262,10 +366,10 @@ namespace SpreadsheetTests
         [ExpectedException(typeof(InvalidNameException))]
         public void SetCellContentsFormulaNullNameException()
         {
-            Formula f = new Formula("A1 + B1");
+            String f = "=A1 + B1";
             Spreadsheet s = new Spreadsheet();
             string name = null;
-            s.SetCellContents(name, f);
+            s.SetContentsOfCell(name, f);
         }
 
         /// <summary>
@@ -276,10 +380,10 @@ namespace SpreadsheetTests
         [ExpectedException(typeof(InvalidNameException))]
         public void SetCellContentsFormulaInvalidNameException()
         {
-            Formula f = new Formula("A1 + B1");
+            String f = "=A1 + B1";
             Spreadsheet s = new Spreadsheet();
             string name = "@%!";
-            s.SetCellContents(name, f);
+            s.SetContentsOfCell(name, f);
         }
 
         /// <summary>
@@ -292,8 +396,8 @@ namespace SpreadsheetTests
         public void SetCellContentsFormulaCircularException()
         {
             Spreadsheet s = new Spreadsheet();
-            Formula f = new Formula("c1 + b1");
-            s.SetCellContents("c1", f);
+            String f = "=c1 + b1";
+            s.SetContentsOfCell("c1", f);
         }
 
         [TestMethod(), Timeout(5000)]
@@ -301,26 +405,27 @@ namespace SpreadsheetTests
         public void SetCellContentsFormulaCircularExceptionDeeperDependency()
         {
             Spreadsheet s = new Spreadsheet();
-            Formula A1 = new Formula("c1*2");
-            s.SetCellContents("a1", A1);
-            Formula B1 = new Formula("1+a1");
-            s.SetCellContents("b1", B1);
-            Formula C1 = new Formula("b1+1");
-            s.SetCellContents("c1", C1);
+            String A1 = "=c1*2";
+            s.SetContentsOfCell("a1", A1);
+            String B1 = "=1+a1";
+            s.SetContentsOfCell("b1", B1);
+            String C1 = "  =b1+1";
+            s.SetContentsOfCell("c1", C1);
         }
 
         /// <summary>
-        /// SetCellContents(string name, double number) returns list
+        /// SetCellContents(string name, Formula f) returns list
         /// If the cell already had previously been set, it changes the current set contents.  
         /// </summary>
         [TestMethod(), Timeout(5000)]
         public void SetCellContentsFormulaAfterCellIsAlreadySet()
         {
             Spreadsheet s = new Spreadsheet();
-            Formula actual = new Formula("40/2");
-            s.SetCellContents("a1", new Formula("2+2"));
-            s.SetCellContents("a1", actual);
-            Assert.IsTrue(s.GetCellContents("a1").Equals(actual));
+            Formula expected = new Formula("40/10");
+            s.SetContentsOfCell("a1", "=2+2");
+            s.SetContentsOfCell("a1", "=40/10");
+            Formula actual = (Formula)s.GetCellContents("a1");
+            Assert.IsTrue(actual.Equals(expected));
         }
 
         /// <summary>
@@ -332,16 +437,17 @@ namespace SpreadsheetTests
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// list {A1, B1, C1} is returned.
         /// </summary>
-        [TestMethod(), Timeout(5000)]
+        [TestMethod()]//, Timeout(5000)]
         public void SetCellContentsFormulaWorksCorrectly()
         {
             Spreadsheet s = new Spreadsheet();
-            Formula B1 = new Formula("A1*2");
-            Formula C1 = new Formula("B1+A1");
-            Formula A1 = new Formula("1+2");
-            s.SetCellContents("B1", B1);
-            s.SetCellContents("C1", C1);
-            IList<string> actualDependents = s.SetCellContents("A1", A1);
+            String B1 = "=A1*2";
+            String C1 = "=B1+A1";
+            String A1 = "=1+2";
+            s.SetContentsOfCell("A1", A1);
+            s.SetContentsOfCell("B1", B1);
+            s.SetContentsOfCell("C1", C1);
+            IList<string> actualDependents = s.SetContentsOfCell("A1", A1);
             IList<string> expectedDependents = new List<string>();
             expectedDependents.Add("A1");
             expectedDependents.Add("B1");
@@ -356,9 +462,9 @@ namespace SpreadsheetTests
         public void GetNamesOfAllNonemptyCells()
         {
             AbstractSpreadsheet s = new Spreadsheet();
-            s.SetCellContents("a1", 1.0);
-            s.SetCellContents("b1", 2.0);
-            s.SetCellContents("c1", 3.0);
+            s.SetContentsOfCell("a1", "1.0");
+            s.SetContentsOfCell("b1", "2.0");
+            s.SetContentsOfCell("c1", "3.0");
             List<string> actualcells = new List<string>();
             foreach (string name in s.GetNamesOfAllNonemptyCells())
             {
@@ -383,9 +489,9 @@ namespace SpreadsheetTests
             Assert.IsFalse(e.MoveNext());
 
             e = s.GetNamesOfAllNonemptyCells().GetEnumerator();
-            s.SetCellContents("a1", new Formula("b1+c1"));
-            s.SetCellContents("c1", new Formula("b1-1"));
-            s.SetCellContents("b1", new Formula("d1+2"));
+            s.SetContentsOfCell("a1", "=b1+c1");
+            s.SetContentsOfCell("c1", "=b1-1");
+            s.SetContentsOfCell("b1", "=d1+2");
             
             Assert.IsTrue(e.MoveNext());
             String s1 = e.Current;
