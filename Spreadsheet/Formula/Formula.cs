@@ -555,7 +555,7 @@ namespace SpreadsheetUtilities
 
             foreach (string token in GetTokens(theFormula))
             {
-                //if the token is a standar variable or is a standard variable after being normalized
+                //if the token is a standard variable or is a standard variable after being normalized
                 if (IsVariable(token) || IsVariable(normalizer(token)))// or if normalized token has not already been returned 
                 {
                     //and if the noramalized version of the variable has not already been enumerated

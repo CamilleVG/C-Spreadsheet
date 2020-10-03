@@ -1,14 +1,12 @@
-﻿// Written by Camille van Ginkel for PS4 assignment for CS 3500, September 2020
+﻿// Written by Camille van Ginkel for PS5 assignment for CS 3500, October 2020
 // Implements AbstractSpreadsheet interface written by Joe Zachary for CS 3500, September 2013
 
 using SpreadsheetUtilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.IO.IsolatedStorage;
-using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace SS
 {
@@ -28,6 +26,7 @@ namespace SS
         /// </summary>
         readonly DependencyGraph dg;
 
+
         /// <summary>
         /// Constructor creates an empty spreadsheet.
         /// </summary>
@@ -39,44 +38,96 @@ namespace SS
         }
 
         /// <summary>
-        /// 
+        /// Constructs an empty spreadsheet that has a variable normalizer and validator, as well as a version property.
         /// </summary>
-        /// <param name="isValid"></param>
-        /// <param name="normalize"></param>
-        /// <param name="version"></param>
+        /// <param name="isValid">Method used to determine whether a string that consists of one or more letters
+        /// followed by one or more digits is a valid variable name.</param>
+        /// <param name="normalize">Method used to convert a cell name to its standard form.  For example,
+        /// Normalize might convert names to upper case.</param>
+        /// <param name="version">Version information</param>
         public Spreadsheet(Func<string, bool> isValid, Func<string, string> normalize, string version) : base(isValid, normalize, version)
         {
             dg = new DependencyGraph();
             spreadsheet = new Dictionary<string, Cell>();
             this.Changed = false;
         }
+
         /// <summary>
-        /// 
+        /// Constructs a new spreadsheet by reading a saved spreadsheet in the file.
+        /// The new spreadsheet should use the provided validity delegate, normalization delegate, and version.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="isValid"></param>
-        /// <param name="normalize"></param>
-        /// <param name="version"></param>
+        /// <param name="filePath">An XML file that repesents a saved spreadsheet</param>
+        /// <param name="isValid">Method used to determine whether a string that consists of one or more letters
+        /// followed by one or more digits is a valid variable name.</param>
+        /// <param name="normalize">Method used to convert a cell name to its standard form.  For example,
+        /// Normalize might convert names to upper case.</param>
+        /// <param name="version">Version information</param>
         public Spreadsheet(String filePath, Func<string, bool> isValid, Func<string, string> normalize, string version) : base(isValid, normalize, version)
         {
-            //It should read a saved spreadsheet from the file (see the Save method) and use it to construct a new spreadsheet.
-            //The new spreadsheet should use the provided validity delegate, normalization delegate, and version. Do not try to 
-            //implement loading from file until after we have discussed XML in class. See the Examples repository for an example
-            //of reading and writing XML files.
+            
+            dg = new DependencyGraph();
+            spreadsheet = new Dictionary<string, Cell>();
             this.Changed = false;
+            try
+            {
+                using (XmlReader reader = XmlReader.Create(filePath))
+                {
+                    string name = ""; //holds the name of the next cell to be created
+                    string contents = "";  //holds the contents of the next cell to be created
+                    
+                    //Scans through all the nodes in XML file looking for the name and contents of cells to add to spreadsheet
+                    while (reader.Read()) 
+                    {
+                        if (reader.IsStartElement())
+                        {
+                            switch (reader.Name)
+                            {
+                                //in the xml file, the name of a cell should always be read first
+                                case "name":  
+                                    reader.Read();
+                                    name = reader.Value;
+                                    break;
+                                case "contents":
+                                    reader.Read();
+                                    contents = reader.Value;
+                                    //Given that the contents element always follows the name element in an xml file,
+                                    //The name and contents variables now have the necessary information to add a cell to spreadsheet.
+                                    this.SetContentsOfCell(name, contents); 
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                throw new SpreadsheetReadWriteException("An error occured while reading spreadsheet.");
+            }
         }
 
         ///<summary>
-        ///Determines whether a string name for a variable meets standard variable name format.
-        ///For example, "x", "_", "x2", "y_15", and "___" are all valid cell names, but
-        /// "25", "2x", and other symbols are not.  Cell names are case sensitive, so "x" and "X" are
-        /// different cell names.
+        /// Determines whether a string name for a variable meets standard variable name format as well as
+        /// extra conditions set by the user passing in the IsValid delegate.
+        /// 
+        /// baseCondition:  Variables for a Spreadsheet are only valid if they are one or more letters followed by 
+        /// one or more digits (numbers). For example, "x", "x2", and "y15" are all valid cell names, but "25", "2x", "_", "y_15" and other 
+        /// symbols are not.  Cell names are case sensitive, so "x" and "X" are different cell names.
+        /// extraCondition: IsValid(x) method
         ///</summary>
         private bool IsValidName(String x)
         {
-            String varPattern = @"[a-zA-Z_](?: [a-zA-Z_]|\d)*";
-            bool result = Regex.IsMatch(x, varPattern);
-            return result;
+            String varPattern = @"^[a-zA-Z]+[0-9]+$";
+            bool baseCondition = Regex.IsMatch(x, varPattern);
+            if (baseCondition)  //Only check the extraCondition if baseCondition is true.
+            {
+                //Check user provided IsValid condition on the normalized version of the variable;
+                bool extraCondition = IsValid(Normalize(x));
+                return (baseCondition && extraCondition);
+            }
+            else
+            {
+                return baseCondition;
+            }
         }
         
         
@@ -122,39 +173,120 @@ namespace SS
                 }
             }
         }
-
+        /// <summary>
+        /// Returns the version information of the spreadsheet saved in the named file.
+        /// If there are any problems opening, reading, or closing the file, the method
+        /// should throw a SpreadsheetReadWriteException with an explanatory message.
+        /// </summary>
         /// <inheritdoc/>
         public override string GetSavedVersion(string filename)
         {
-            throw new NotImplementedException();
+            //readXML file
+            try
+            {
+                string result = null;
+                using (XmlReader reader = XmlReader.Create(filename))
+                {
+                    while (reader.Read()){
+                        if (reader.IsStartElement())
+                        {
+                            if (reader.Name.Equals("spreadsheet"))
+                            {
+                                result = reader["version"];
+                            }
+                        }
+                    }
+                }
+                return result;
+            }
+            catch
+            {
+                throw new SpreadsheetReadWriteException("An error occured while loading spreadsheet.");
+            }
         }
 
+
+        /// <summary>
+        /// Writes the contents of this spreadsheet to the named file using an XML format.
+        /// The XML elements should be structured as follows:
+        /// 
+        /// <spreadsheet version="version information goes here">
+        /// 
+        /// <cell>
+        /// <name>cell name goes here</name>
+        /// <contents>cell contents goes here</contents>    
+        /// </cell>
+        /// 
+        /// </spreadsheet>
+        /// 
+        /// There should be one cell element for each non-empty cell in the spreadsheet.  
+        /// If the cell contains a string, it should be written as the contents.  
+        /// If the cell contains a double d, d.ToString() should be written as the contents.  
+        /// If the cell contains a Formula f, f.ToString() with "=" prepended should be written as the contents.
+        /// 
+        /// If there are any problems opening, writing, or closing the file, the method should throw a
+        /// SpreadsheetReadWriteException with an explanatory message.
+        /// </summary>
         /// <inheritdoc/>
+        /// <param name="filename">The name where the file is saved</param>
         public override void Save(string filename)
         {
-            /// <summary>
-            /// Writes the contents of this spreadsheet to the named file using an XML format.
-            /// The XML elements should be structured as follows:
-            /// 
-            /// <spreadsheet version="version information goes here">
-            /// 
-            /// <cell>
-            /// <name>cell name goes here</name>
-            /// <contents>cell contents goes here</contents>    
-            /// </cell>
-            /// 
-            /// </spreadsheet>
-            /// 
-            /// There should be one cell element for each non-empty cell in the spreadsheet.  
-            /// If the cell contains a string, it should be written as the contents.  
-            /// If the cell contains a double d, d.ToString() should be written as the contents.  
-            /// If the cell contains a Formula f, f.ToString() with "=" prepended should be written as the contents.
-            /// 
-            /// If there are any problems opening, writing, or closing the file, the method should throw a
-            /// SpreadsheetReadWriteException with an explanatory message.
-            /// </summary>
-            
-            throw new NotImplementedException();
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.IndentChars = "  ";
+            try
+            {
+                using (XmlWriter writer = XmlWriter.Create(filename, settings))
+                {
+                    writer.WriteStartDocument();
+                    writer.WriteStartElement("spreadsheet");
+                    writer.WriteAttributeString("version", this.Version);
+
+                    //creates a cell block for every nonempty cell in spreadsheet
+                    foreach (string cell in GetNamesOfAllNonemptyCells())
+                    {
+                        writer.WriteStartElement("cell"); //<cell>
+                                                          //Each cell block contains a name block and a contents block
+
+                        //Creates name block
+                        writer.WriteStartElement("name");
+                        writer.WriteString(cell);
+                        writer.WriteEndElement(); //ends name
+
+                        //Creates contents block
+                        writer.WriteStartElement("contents");
+                        //The contents of a cell can be a string, double, or formula
+                        //In order to write contents, convert the contents of a cell to a string and write it
+                        if (GetCellContents(cell) is String) //if contents is string
+                        {
+                            writer.WriteString((string)GetCellContents(cell));
+                        }
+                        else if (GetCellContents(cell) is double) //if contents is double
+                        {
+                            double d = (double)GetCellContents(cell);
+                            writer.WriteString(d.ToString());
+                        }
+                        else  //if contents is Formula
+                        {
+                            string f = ((Formula)GetCellContents(cell)).ToString();
+                            f = "=" + f; //prepends the equal sign to the formula
+                            writer.WriteString(f);
+                        }
+                        writer.WriteEndElement(); //ends contents
+
+                        writer.WriteEndElement(); //ends cell
+                    }
+                    writer.WriteEndElement(); //ends spreadsheet
+                    writer.WriteEndDocument();
+                }
+
+            } 
+            catch
+            {
+                throw new SpreadsheetReadWriteException("An error occured while loading spreadsheet.");
+            }
+            //After a spreadsheet is saved, it's changed property is reset to false.
+            Changed = false;
         }
 
         /// <inheritdoc/>
@@ -312,6 +444,7 @@ namespace SS
             {
                 throw new InvalidNameException();
             }
+            name = Normalize(name);
             IList<string> Dependents = new List<string>();  //the list of the names of all direct and indirect dependent cells
             double num;
             content = content.Trim();
@@ -323,14 +456,15 @@ namespace SS
             {
                 if (content[0].Equals('='))
                 {
-                    Dependents = SetCellContents(name, new Formula(content.Substring(1)));
+                    Dependents = SetCellContents(name, new Formula(content.Substring(1), Normalize, IsValid));
+                }
+                else
+                {
+                    //Other wise, try setting cell contents as a string
+                    Dependents = SetCellContents(name, content);
                 }
             }
-            else
-            {
-                //Other wise, try setting cell contents as a string
-                Dependents = SetCellContents(name, content);
-            }
+            
             Changed = true;
             return Dependents;
         }
@@ -362,25 +496,33 @@ namespace SS
         private double Lookup(string variable)
         {
             variable = Normalize(variable);
-            if (GetCellContents(variable) is Double)
+            //if the spreadsheet does not contain the variable, throw arguement exception
+            //and the formula that is calling the lookup method will be FormulaError
+            if (!(spreadsheet.ContainsKey(variable)))
+            {
+                throw new ArgumentException();
+            }
+            //Otherwise, if the cell exists in spreadsheet
+            if (GetCellContents(variable) is Double) //If it is a double, return that double
             {
                 return (double)spreadsheet[variable].Value;
             }
-            else if (GetCellContents(variable) is Formula)
+            else if (GetCellContents(variable) is Formula)  //If it is a formula, evaluate the formula
             {
                 Formula f = (Formula)spreadsheet[variable].Contents;
                 object eval = f.Evaluate(x => this.Lookup(x));
+                //Evaluating the formula can result in a double or a FormulaError
                 if (eval is double)
                 {
                     double result = (double)eval; 
                     return result;
                 }
-                else //if the result if a FormulaError
+                else //if the result if a FormulaError, throw argument Exception 
                 {
                     throw new ArgumentException("");
                 }
             }
-            else
+            else  //If the cell is a string, it cannot be evaluated to a double
             {
                 throw new ArgumentException("One of the variables in formula is a string.");
             }

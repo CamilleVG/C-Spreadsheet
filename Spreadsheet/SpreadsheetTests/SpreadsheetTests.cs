@@ -1,4 +1,4 @@
-///Written by Camille van Ginkel for PS4 assignment in CS 3500, September 2020
+///Written by Camille van Ginkel for PS5 assignment in CS 3500, October 2020
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SS;
@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography.X509Certificates;
 
 namespace SpreadsheetTests
 {
@@ -15,26 +16,188 @@ namespace SpreadsheetTests
     {
 
         /// <summary>
-        /// GetCellValue(string name)
-        /// If the value of the cell is a double, returns double
+        /// IsValidName(string name)
+        /// Variables for a Spreadsheet are only valid if they are one or more letters followed 
+        /// by one or more digits (numbers). This must now be enforced by the spreadsheet.
         /// </summary>
         [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(InvalidNameException))]
+        public void InvalidNameException()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a_1", "4.0");
+        }
+        /// <summary>
+        /// IsValidName(string name)
+        /// Variables for a Spreadsheet are only valid if they are one or more letters followed 
+        /// by one or more digits (numbers). This must now be enforced by the spreadsheet.
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(InvalidNameException))]
+        public void InvalidNameExceptionUnderscore()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("_", "4.0");
+        }
+        /// <summary>
+        /// IsValidName(string name)
+        /// Variables for a Spreadsheet are only valid if they are one or more letters followed 
+        /// by one or more digits (numbers). This must now be enforced by the spreadsheet.
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(InvalidNameException))]
+        public void InvalidNameExceptionNoLetter()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("4", "4.0");
+        }
+        /// <summary>
+        /// IsValidName(string name)
+        /// Variables for a Spreadsheet are only valid if they are one or more letters followed 
+        /// by one or more digits (numbers). This must now be enforced by the spreadsheet.
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(InvalidNameException))]
+        public void InvalidNameExceptionNoNumber()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a", "4.0");
+        }
+
+        /// <summary>
+        /// Returns the version information of the spreadsheet saved in the named file.
+        /// If there are any problems opening, reading, or closing the file, the method
+        /// should throw a SpreadsheetReadWriteException with an explanatory message.
+        /// </summary>
+       
+        /// <summary>
+        /// Save (string filename)
+        /// If an invalid vile path is input into Save() method, throws ReadWriteException(); 
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
         public void SaveInvalidFilePathSpreadsheetReadWriteException()
         {
             Spreadsheet s = new Spreadsheet();
-            s.SetContentsOfCell("a1", "4.0");
-            double actual = (double) s.GetCellValue("a1");
-            Assert.IsTrue(actual == 4.0);
+            s.Save("/missing/save.xml");
+        }
+
+        /// <summary>
+        /// Save(string filename)
+        /// If name is null, there should be a reading file error.
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void SaveReadNameIsNullException()
+        {
+            Spreadsheet s = new Spreadsheet();
+            String filename = null;
+            s.Save(filename);
+        }
+
+        /// <summary>
+        /// Save (string filename)
+        /// If an invalid vile path is input into Save() method, throws ReadWriteException(); 
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        public void SaveWorksCorrectly()
+        {
+            Func<string, string> normalizer = x => x.ToUpper();
+            Func<string, bool> validator = x => char.IsUpper(x[0]);
+            Spreadsheet s = new Spreadsheet(validator, normalizer, "1.0");
+            s.SetContentsOfCell("c1", "5.0");
+            s.SetContentsOfCell("b1", "=c1*2" ); //b1 = 10
+            s.SetContentsOfCell("a1", "=b1*2"); //a1=20
+            s.SetContentsOfCell("x1", "I'm a string");
+            
+            String filename = @"C:\Users\Camille\source\repos\spreadsheet-CamilleVG\Spreadsheet\SpreadsheetTests\save.txt";
+            s.Save(filename);
         }
 
 
+        /// <summary>
+        /// Spreadsheet (string filename, validator, normalizer, version);
+        /// It should read a saved spreadsheet from the file (see the Save method) and use it to construct a new spreadsheet.
+        /// The new spreadsheet should use the provided validity delegate, normalization delegate, and version. Do not try to 
+        /// implement loading from file until after we have discussed XML in class. See the Examples repository for an example
+        /// of reading and writing XML files.
+        /// 
+        /// This test should correctly scan file from filename and creates a spreadsheet with the same cell, but normalized with it's own normalizer.
+        /// You can check the resulting file in save.txt
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        public void SpreadsheetConstructerThatReadsFile()
+        {
+            Func<string, string> normalizer = x => x.ToUpper();
+            Func<string, bool> validator = x => char.IsUpper(x[0]);
+            Spreadsheet s = new Spreadsheet(validator, normalizer, "1.0");
+            s.SetContentsOfCell("c1", "5.0");
+            s.SetContentsOfCell("b1", "=c1*2"); //b1 = 10
+            s.SetContentsOfCell("a1", "=b1*2"); //a1=20
+            String filename = @"C:\Users\Camille\source\repos\spreadsheet-CamilleVG\Spreadsheet\SpreadsheetTests\save.txt";
+            s.Save(filename);
+
+            Func<string, string> normalizer2 = x => x.ToLower();
+            Func<string, bool> validator2 = x => char.IsLower(x[0]);
+            Spreadsheet s2 = new Spreadsheet(filename, validator2, normalizer2, "4.0");
+            s2.Save(filename);
+        }
+
+        /// <summary>
+        /// Spreadsheet (string filename, validator, normalizer, version);
+        /// It should read a saved spreadsheet from the file (see the Save method) and use it to construct a new spreadsheet.
+        /// The new spreadsheet should use the provided validity delegate, normalization delegate, and version. Do not try to 
+        /// implement loading from file until after we have discussed XML in class. See the Examples repository for an example
+        /// of reading and writing XML files.
+        /// 
+        /// This test should correctly scan file from filename and creates a spreadsheet with the same cell, but normalized with it's own normalizer.
+        /// You can check the resulting file in save.txt
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void SpreadsheetConstructerBadFilePath()
+        {
+            Func<string, string> normalizer2 = x => x.ToLower();
+            Func<string, bool> validator2 = x => char.IsLower(x[0]);
+            Spreadsheet s2 = new Spreadsheet("/missing/save.xml", validator2, normalizer2, "4.0");
+        }
+
+        /// <summary>
+        /// GetSavedVersion (string filename)
+        /// If an invalid vile path is input into Save() method, throws ReadWriteException(); 
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        [ExpectedException(typeof(SpreadsheetReadWriteException))]
+        public void GetSaveVersionInvalidFilePathSpreadsheetReadWriteException()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.GetSavedVersion("/missing/save.xml");
+        }
+
+        /// <summary>
+        /// GetSavedVersion (string filename)
+        /// </summary>
+        [TestMethod(), Timeout(5000)]
+        public void GetSaveVersionWorksCorrectly()
+        {
+            Func<string, string> normalizer = x => x.ToUpper();
+            Func<string, bool> validator = x => char.IsUpper(x[0]);
+            Spreadsheet s = new Spreadsheet(validator, normalizer, "2.0");
+            s.SetContentsOfCell("c1", "5.0");
+            s.SetContentsOfCell("b1", "=c1*2"); //b1 = 10
+            s.SetContentsOfCell("a1", "=b1*2"); //a1=20
+
+            String filename = @"C:\Users\Camille\source\repos\spreadsheet-CamilleVG\Spreadsheet\SpreadsheetTests\save.txt";
+            s.Save(filename);
+            Assert.IsTrue(s.GetSavedVersion(filename).Equals("2.0"));
+        }
 
         /// <summary>
         /// GetCellValue(string name)
         /// If the contents of the cell is a formula, returns the evaluated formula.  
         /// If it is a valid formula, returns double
         /// </summary>
-        [TestMethod()]//, Timeout(5000)]
+        [TestMethod(), Timeout(5000)]
         public void GetCellValueOfFormula()
         {
             Spreadsheet s = new Spreadsheet();
@@ -48,18 +211,21 @@ namespace SpreadsheetTests
         /// <summary>
         /// GetCellValue(string name)
         /// If the contents of the cell is a formula, returns the evaluated formula.  
+        /// If the input formula is dependent on other formulas, correctly gets values from those formulas.
         /// If it is a valid formula, returns double
         /// </summary>
         [TestMethod(), Timeout(5000)]
-        public void GetCellValueOfFormulaRecursion()
+        public void GetCellValueOfFormulaLookupRecursion()
         {
             Spreadsheet s = new Spreadsheet();
-            s.SetContentsOfCell("b1", "=c1+1.0");
-            s.SetContentsOfCell("c1", "=d1+ 2.0");
-            s.SetContentsOfCell("d1", "=e1");
-            s.SetContentsOfCell("e1", "=f1*2");
+            s.SetContentsOfCell("b1", "=c1+1.0"); //8+1
+            s.SetContentsOfCell("c1", "=d1+2.0"); //6+2
+            s.SetContentsOfCell("d1", "=e1"); //6
+            s.SetContentsOfCell("e1", "=f1*2"); //3*2
             s.SetContentsOfCell("f1", "=3.0");
-            s.SetContentsOfCell("a1", "=b1 + 2"); //9.0 +2 == 11
+            s.SetContentsOfCell("a1", "=b1 + 2"); //9+11
+            // a1 is depndent on b1 -> c1 -> d1 -> e1 -> f1 which is the base and is a double
+            // b1 is set before c1, so it must be recalculated after c1 is set
             double actual = (double)s.GetCellValue("a1");
             Assert.IsTrue(actual == 11.0);
         }
@@ -81,55 +247,31 @@ namespace SpreadsheetTests
         }
 
         /// <summary>
-        /// Save(string)
-        /// </summary>
-        /// 
-        /// <summary>
-        /// Writes the contents of this spreadsheet to the named file using an XML format.
-        /// The XML elements should be structured as follows:
-        /// 
-        /// <spreadsheet version="version information goes here">
-        /// 
-        /// <cell>
-        /// <name>cell name goes here</name>
-        /// <contents>cell contents goes here</contents>    
-        /// </cell>
-        /// 
-        /// </spreadsheet>
-        /// 
-        /// There should be one cell element for each non-empty cell in the spreadsheet.  
-        /// If the cell contains a string, it should be written as the contents.  
-        /// If the cell contains a double d, d.ToString() should be written as the contents.  
-        /// If the cell contains a Formula f, f.ToString() with "=" prepended should be written as the contents.
-        /// 
-        /// If there are any problems opening, writing, or closing the file, the method should throw a
-        /// SpreadsheetReadWriteException with an explanatory message.
-        /// </summary>
-
-        /// <summary>
-        /// Save(string name)
-        /// If name is null, throws an InvalidNameException.
+        /// GetCellValue(string name)
+        /// If the contents of the cell is a formula, returns the evaluated formula.  
+        /// If it is a valid formula, returns double
         /// </summary>
         [TestMethod(), Timeout(5000)]
-        [ExpectedException(typeof(SpreadsheetReadWriteException))]
-        public void FixMe()
+        [ExpectedException(typeof(InvalidNameException))]
+        public void GetCellValueGivenBadName()
         {
             Spreadsheet s = new Spreadsheet();
-            String filename = "/missing/save.xml";
-            s.Save(filename);
+            s.SetContentsOfCell("b1", "=c1+1.0");
+            s.GetCellValue(null);
         }
 
         /// <summary>
-        /// Save(string filename)
-        /// If name is null, there should be a reading file error.
+        /// GetCellValue(string name)
+        /// If the contents of the cell is a formula, returns the evaluated formula.  
+        /// If it is a valid formula, returns double
         /// </summary>
         [TestMethod(), Timeout(5000)]
-        [ExpectedException(typeof(SpreadsheetReadWriteException))]
-        public void SaveReadException()
+        [ExpectedException(typeof(InvalidNameException))]
+        public void GetCellValueGivenInvalidName()
         {
             Spreadsheet s = new Spreadsheet();
-            String filename = null;
-            s.Save(filename);
+            s.SetContentsOfCell("b1", "=c1+1.0");
+            s.GetCellValue("_y");
         }
 
         /// <summary>
@@ -168,6 +310,7 @@ namespace SpreadsheetTests
             Spreadsheet s = new Spreadsheet();
             s.SetContentsOfCell("a1", "2.0");
             double d = (double)s.GetCellContents("a1");
+            Assert.IsTrue(d == 2.0);
         }
         [TestMethod(), Timeout(5000)]
         public void GetCellContentsReturnsString()
@@ -175,6 +318,7 @@ namespace SpreadsheetTests
             Spreadsheet s = new Spreadsheet();
             s.SetContentsOfCell("a1", "Title");
             string contents = (string) s.GetCellContents("a1");
+            Assert.IsTrue(contents.Equals("Title"));
         }
         [TestMethod(), Timeout(5000)]
         public void GetCellContentsReturnsFormula()
@@ -234,21 +378,21 @@ namespace SpreadsheetTests
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// list {A1, B1, C1} is returned.
         /// </summary>
-        //[TestMethod(), Timeout(5000)]
-        //public void SetCellContentsDoubleCorrectImplementation()
-        //{
-        //    Spreadsheet s = new Spreadsheet();
-        //    Formula B1 = new Formula("A1*2");
-        //    Formula C1 = new Formula("B1+A1");
-        //    s.SetContentsOfCell("B1", B1);
-        //    s.SetCellContents("C1", C1);
-        //    IList<string> actualDependents = s.SetCellContents("A1", 2.0);
-        //    IList<string> expectedDependents = new List<string>();
-        //    expectedDependents.Add("A1");
-        //    expectedDependents.Add("B1");
-        //    expectedDependents.Add("C1");
-        //    Assert.IsTrue(actualDependents.SequenceEqual(expectedDependents));
-        //}
+        [TestMethod(), Timeout(5000)]
+        public void SetCellContentsDoubleCorrectImplementation()
+        {
+            Spreadsheet s = new Spreadsheet();
+            string B1 = "=A1*2";
+            string C1 = "=B1+A1";
+            s.SetContentsOfCell("B1", B1);
+            s.SetContentsOfCell("C1", C1);
+            IList<string> actualDependents = s.SetContentsOfCell("A1", "2.0");
+            IList<string> expectedDependents = new List<string>();
+            expectedDependents.Add("A1");
+            expectedDependents.Add("B1");
+            expectedDependents.Add("C1");
+            Assert.IsTrue(actualDependents.SequenceEqual(expectedDependents));
+        }
         /// <summary>
         /// SetCellContents(string name, string text) returns list
         /// If text is null, throws an ArgumentNullException.
@@ -310,7 +454,7 @@ namespace SpreadsheetTests
         /// SetCellContents(string name, string text) returns list
         /// If the cell already had previously been set, it changes the current set contents.  
         /// </summary>
-        [TestMethod()]//, Timeout(5000)]
+        [TestMethod(), Timeout(5000)]
         public void SetCellContentsStringAfterCellIsAlreadySet()
         {
             Spreadsheet s = new Spreadsheet();
@@ -328,21 +472,21 @@ namespace SpreadsheetTests
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// list {A1, B1, C1} is returned.
         /// </summary>
-        //[TestMethod(), Timeout(5000)]
-        //public void SetCellContentsStringCorrectImplementation()
-        //{
-        //    Spreadsheet s = new Spreadsheet();
-        //    s.SetCellContents("c1", new Formula("b1+2"));
-        //    s.SetCellContents("b1", new Formula("a1+2"));
-        //    string name = "a1";
-        //    IList<string> actualDependents = s.SetCellContents(name, "Title");
-        //    Assert.IsTrue(s.GetCellContents("a1").Equals("Title"));
-        //    IList<string> expectedDependents = new List<string>();
-        //    expectedDependents.Add("a1");
-        //    expectedDependents.Add("b1");
-        //    expectedDependents.Add("c1");
-        //    Assert.IsTrue(actualDependents.SequenceEqual(expectedDependents));
-        //}
+        [TestMethod(), Timeout(5000)]
+        public void SetCellContentsStringCorrectImplementation()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("c1", "=b1+2");
+            s.SetContentsOfCell("b1", "=a1+2");
+            string name = "a1";
+            IList<string> actualDependents = s.SetContentsOfCell(name, "Title");
+            Assert.IsTrue(s.GetCellContents("a1").Equals("Title"));
+            IList<string> expectedDependents = new List<string>();
+            expectedDependents.Add("a1");
+            expectedDependents.Add("b1");
+            expectedDependents.Add("c1");
+            Assert.IsTrue(actualDependents.SequenceEqual(expectedDependents));
+        }
 
         /// <summary>
         /// SetCellContents(string name, Formula f)
@@ -376,7 +520,7 @@ namespace SpreadsheetTests
         /// SetCellContents(String name, Formula f)
         /// If name is , throws an InvalidNameException.
         /// </summary>
-        [TestMethod()]//, Timeout(5000)]
+        [TestMethod(), Timeout(5000)]
         [ExpectedException(typeof(InvalidNameException))]
         public void SetCellContentsFormulaInvalidNameException()
         {
@@ -437,7 +581,7 @@ namespace SpreadsheetTests
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// list {A1, B1, C1} is returned.
         /// </summary>
-        [TestMethod()]//, Timeout(5000)]
+        [TestMethod(), Timeout(5000)]
         public void SetCellContentsFormulaWorksCorrectly()
         {
             Spreadsheet s = new Spreadsheet();
@@ -453,6 +597,14 @@ namespace SpreadsheetTests
             expectedDependents.Add("B1");
             expectedDependents.Add("C1");
             Assert.IsTrue(expectedDependents.SequenceEqual(actualDependents));
+        }
+
+        [TestMethod(), Timeout(5000)]
+        public void SetContentsOfCellWithEmptyText()
+        {
+            Spreadsheet s = new Spreadsheet();
+            s.SetContentsOfCell("a1", "   ");
+            Assert.IsTrue(s.GetNamesOfAllNonemptyCells().Count().Equals(0));
         }
         
         /// <summary>

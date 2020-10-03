@@ -1,4 +1,4 @@
-﻿///Written by Camille van Ginkel for PS4 assignment for CS 3500, September 2020
+﻿///Written by Camille van Ginkel for PS5 assignment for CS 3500, October 2020
 
 using SpreadsheetUtilities;
 using System;
@@ -87,10 +87,7 @@ namespace SS
         /// <param name="input">The input of a cell.  It must be a double, Formula, or String.</param>
         public void SetContents(object input)
         {
-            if (!(input is double || input is string || input is Formula))
-            {
-                throw new ArgumentException();
-            }
+            
             contents = input;
             if (input is string || input is double)
             {
