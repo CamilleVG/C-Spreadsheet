@@ -376,7 +376,7 @@
         </member>
         <member name="M:SS.Spreadsheet.#ctor(System.String,System.Func{System.String,System.Boolean},System.Func{System.String,System.String},System.String)">
             <summary>
-            Constructs a new spreadsheet by reading a saved spreadsheet in the file.
+            Constructs a new spreadsheet by reading a saved spreadsheet that is passed in via filePath.
             The new spreadsheet should use the provided validity delegate, normalization delegate, and version.
             </summary>
             <param name="filePath">An XML file that repesents a saved spreadsheet</param>

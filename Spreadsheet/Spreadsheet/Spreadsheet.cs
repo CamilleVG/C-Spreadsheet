@@ -1,4 +1,5 @@
 ﻿// Written by Camille van Ginkel for PS5 assignment for CS 3500, October 2020
+// PS5 branch of spreadsheet Repository Version 1.0.1
 // Implements AbstractSpreadsheet interface written by Joe Zachary for CS 3500, September 2013
 
 using SpreadsheetUtilities;
@@ -53,7 +54,7 @@ namespace SS
         }
 
         /// <summary>
-        /// Constructs a new spreadsheet by reading a saved spreadsheet in the file.
+        /// Constructs a new spreadsheet by reading a saved spreadsheet that is passed in via filePath.
         /// The new spreadsheet should use the provided validity delegate, normalization delegate, and version.
         /// </summary>
         /// <param name="filePath">An XML file that repesents a saved spreadsheet</param>
