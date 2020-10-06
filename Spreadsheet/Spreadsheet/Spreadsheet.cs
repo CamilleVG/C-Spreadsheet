@@ -6,6 +6,7 @@ using SpreadsheetUtilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 
@@ -300,6 +301,9 @@ namespace SS
         {
             if (spreadsheet.ContainsKey(name)) //If the spreadsheet has a the named non-empty cell, edit contents of cell
             {
+                //Update dependency graph
+                IEnumerable<string> empty = Enumerable.Empty<string>();
+                dg.ReplaceDependees(name, empty);
                 spreadsheet[name].SetContents(number); 
             }
             else //Otherwise, create a new cell
@@ -332,6 +336,9 @@ namespace SS
             {
                 if (spreadsheet.ContainsKey(name))
                 {
+                    //Update dependency graph
+                    IEnumerable<string> empty = Enumerable.Empty<string>();
+                    dg.ReplaceDependees(name, empty);
                     spreadsheet[name].SetContents(text);
                 }
                 else
@@ -339,6 +346,8 @@ namespace SS
                     Cell cell = new Cell(text);
                     spreadsheet.Add(name, cell);
                 }
+                
+                
             }
             //Return list of direct and indirect dependents in the order that they need to be recalulated.
             IList<string> Dependents = new List<string>();
@@ -364,6 +373,9 @@ namespace SS
                 //If the cell is non-empty, change the contents of the already existing cell object
                 if (spreadsheet.ContainsKey(name))
                 {
+                    //Update dependency graph
+                    IEnumerable<string> empty = Enumerable.Empty<string>();
+                    dg.ReplaceDependees(name, empty);
                     spreadsheet[name].SetContents(formula);
                 }
                 //Otherwise, add the cell to spreadsheet

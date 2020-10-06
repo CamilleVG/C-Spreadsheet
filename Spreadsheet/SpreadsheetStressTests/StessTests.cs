@@ -72,9 +72,8 @@ namespace SpreadsheetTests
             for (int i = 1; i < 200; i++)
             {
                 cells.Add("A" + i);
-                double num = i + 1;
-                string f = "=A + " + num;
-                Assert.IsTrue(cells.SetEquals(s.SetContentsOfCell("A" + i, f)));
+
+                Assert.IsTrue(cells.SetEquals(s.SetContentsOfCell("A" + i, "=A" + (i + 1))));
             }
         }
 
@@ -104,9 +103,7 @@ namespace SpreadsheetTests
             Spreadsheet s = new Spreadsheet();
             for (int i = 1; i < 200; i++)
             {
-                double num = i + 1;
-                string f = "=A + " + num;
-                s.SetContentsOfCell("A" + i, f);
+                s.SetContentsOfCell("A" + i, "=A" + (i + 1));
             }
             try
             {
@@ -138,27 +135,28 @@ namespace SpreadsheetTests
         }
 
 
-        [TestMethod(), Timeout(2000)]
+        [TestMethod()]//, Timeout(2000)]
         [TestCategory("43")]
         public void TestStress4()
         {
             Spreadsheet s = new Spreadsheet();
-            for (int i = 0; i < 500; i++)
+            for (int i = 0; i < 10; i++)
             {
-                double num = i + 1;
-                string f = "=A1 + " + num;
-                s.SetContentsOfCell("A1" + i, f);
+                s.SetContentsOfCell("A" + i, "=A" + (i+1));
             }
             LinkedList<string> firstCells = new LinkedList<string>();
             LinkedList<string> lastCells = new LinkedList<string>();
-            for (int i = 0; i < 250; i++)
+            for (int i = 0; i < 5; i++)
             {
-                firstCells.AddFirst("A1" + i);
-                lastCells.AddFirst("A1" + (i + 250));
+                firstCells.AddFirst("A" + i);
+                lastCells.AddFirst("A" + (i + 5));
             }
-            Assert.IsTrue(s.SetContentsOfCell("A1249", "25.0").SequenceEqual(firstCells));
-            Assert.IsTrue(s.SetContentsOfCell("A1499", "0").SequenceEqual(lastCells));
+            IList<string> actual = s.SetContentsOfCell("A4", "25.0");
+            Assert.IsTrue(s.SetContentsOfCell("A4", "25.0").SequenceEqual(firstCells));
+            IList<string> actualLast = s.SetContentsOfCell("A9", "0");
+            Assert.IsTrue(s.SetContentsOfCell("A9", "0").SequenceEqual(lastCells));
         }
+
         [TestMethod(), Timeout(2000)]
         [TestCategory("44")]
         public void TestStress4a()
