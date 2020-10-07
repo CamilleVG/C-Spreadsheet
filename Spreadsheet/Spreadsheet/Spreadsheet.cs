@@ -497,6 +497,7 @@ namespace SS
                     Dependents = SetCellContents(name, content);
                 }
             }
+            spreadsheet[name].SetContents(content);
             Changed = true;
             return Dependents;
         }

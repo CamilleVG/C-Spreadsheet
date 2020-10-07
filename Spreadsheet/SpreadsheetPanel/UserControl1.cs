@@ -56,6 +56,7 @@ namespace SS
         private const int ROW_COUNT = 99;
 
 
+        private Spreadsheet sp;
         /// <summary>
         /// Creates an empty SpreadsheetPanel
         /// </summary>
@@ -64,6 +65,7 @@ namespace SS
         {
 
             InitializeComponent();
+            sp = new Spreadsheet();
 
             // The DrawingPanel is quite large, since it has 26 columns and 99 rows.  The
             // SpreadsheetPanel itself will usually be smaller, which is why scroll bars
@@ -113,9 +115,12 @@ namespace SS
         /// <param name="value"></param>
         /// <returns></returns>
 
-        public bool SetValue(int col, int row, string value)
+        public bool SetContents(int col, int row, string contents)
         {
-            return drawingPanel.SetValue(col, row, value);
+            string name = this.GetCellName(col, row);
+            sp.SetContentsOfCell(name, contents);
+            object value = sp.GetCellValue(name);
+            return drawingPanel.SetValue(col, row, value.ToString());
         }
 
 
@@ -160,7 +165,50 @@ namespace SS
         {
             drawingPanel.GetSelection(out col, out row);
         }
+        public string GetCellName()
+        {
+            int col, row;
+            drawingPanel.GetSelection(out col, out row);
+            int unicode = col + 64;
+            string columnLetter = (Convert.ToChar(65)).ToString();
+            String name = columnLetter + row;
+            return name;
+        }
+        public string GetCellName(int col, int row)
+        {
+            int unicode = col + 64;
+            string columnLetter = (Convert.ToChar(65)).ToString();
+            String name = columnLetter + row;
+            return name;
+        }
 
+        public Object GetCellValue()
+        {
+            try
+            {
+                String name = GetCellName();
+                return sp.GetCellValue(name);
+            }
+            catch
+            {
+                return "Error Occured in Panel";
+            }
+            
+        }
+        public string GetCellContents()
+        {
+            try
+            {
+                String name = GetCellName();
+                string contents = (string)sp.GetCellContents(name);
+                return contents;
+            }
+            catch
+            {
+                return "Error Occured in Panel";
+            }
+                
+        }
 
         /// <summary>
         /// When the SpreadsheetPanel is resized, we set the size and locations of the three

@@ -84,6 +84,10 @@
       <Project>{602FB685-6C98-41A2-AF21-FD1889F79549}</Project>
       <Name>SpreadsheetPanel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Spreadsheet\Spreadsheet.csproj">
+      <Project>{8cdcc6ba-3ad5-45bf-8374-e23a3552e53e}</Project>
+      <Name>Spreadsheet</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
