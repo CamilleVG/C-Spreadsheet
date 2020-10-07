@@ -327,6 +327,11 @@
             <param name="Contents">The formula that was input into the cell.</param>
             <param name="Lookup"> Lookup method to return the value of a cell(variable) is defined in spreadsheet</param>
         </member>
+        <member name="M:SS.Cell.Recalculate(System.Func{System.String,System.Double})">
+            <summary>
+            Recalculates value of a cell that contains a Formula
+            </summary>
+        </member>
         <member name="P:SS.Cell.Contents">
             <summary>
             Returns the input of a cell.

@@ -63,7 +63,18 @@ namespace SS
             value = Contents.Evaluate(Lookup);
         }
 
-        
+
+        /// <summary>
+        /// Recalculates value of a cell that contains a Formula
+        /// </summary>
+        public void Recalculate(Func<string, double> Lookup)
+        {
+            if (this.Contents is Formula)
+            {
+                value = ((Formula)Contents).Evaluate(Lookup);
+            }
+            
+        }
 
         /// <summary>
         /// Returns the input of a cell.
@@ -97,6 +108,7 @@ namespace SS
                 value = null;
             }
         }
+
 
 
     }

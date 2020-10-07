@@ -76,7 +76,7 @@ namespace SS
                 {
                     string name = ""; //holds the name of the next cell to be created
                     string contents = "";  //holds the contents of the next cell to be created
-                    
+                    string expectedVersion = "";
                     //Scans through all the nodes in XML file looking for the name and contents of cells to add to spreadsheet
                     while (reader.Read()) 
                     {
@@ -84,6 +84,14 @@ namespace SS
                         {
                             switch (reader.Name)
                             {
+                                case "spreadsheet":
+                                    reader.MoveToNextAttribute();
+                                    expectedVersion = reader.Value;
+                                    if (!expectedVersion.Equals(version))
+                                        {
+                                        throw new SpreadsheetReadWriteException("");
+                                        }
+                                    break;
                                 //in the xml file, the name of a cell should always be read first
                                 case "name":  
                                     reader.Read();
@@ -146,18 +154,28 @@ namespace SS
         /// <returns>The contents that was input into the cell.</returns>
         public override object GetCellContents(string name)
         {
-            if (name is null || !IsValidName(name) || !spreadsheet.ContainsKey(name))
+            if (name is null || !IsValidName(name))
             {
                throw new InvalidNameException();
+            }
+            name = Normalize(name);
+            if (!spreadsheet.ContainsKey(name))
+            {
+                return "";
             }
             return spreadsheet[name].Contents;
         }
         /// <inheritdoc/>
         public override object GetCellValue(string name)
         {
-            if (name is null || !IsValidName(name) || !spreadsheet.ContainsKey(name))
+            if (name is null || !IsValidName(name))
             {
                 throw new InvalidNameException();
+            }
+            name = Normalize(name);
+            if (!spreadsheet.ContainsKey(name))
+            {
+                return "";
             }
             return spreadsheet[name].Value;
         }
@@ -317,6 +335,7 @@ namespace SS
             foreach (string dependent in GetCellsToRecalculate(name)) 
             {
                 Dependents.Add(dependent);
+                spreadsheet[dependent].Recalculate(this.Lookup);
             }
             return Dependents; 
         }
@@ -399,6 +418,7 @@ namespace SS
                 foreach (string dependent in GetCellsToRecalculate(name))
                 {
                     Dependents.Add(dependent);
+                    spreadsheet[dependent].Recalculate(this.Lookup);
                 }
                 return Dependents;
             }
@@ -457,7 +477,7 @@ namespace SS
             {
                 throw new InvalidNameException();
             }
-            name = Normalize(name);
+            name = this.Normalize(name);
             IList<string> Dependents = new List<string>();  //the list of the names of all direct and indirect dependent cells
             double num;
             content = content.Trim();
@@ -477,7 +497,6 @@ namespace SS
                     Dependents = SetCellContents(name, content);
                 }
             }
-            
             Changed = true;
             return Dependents;
         }
@@ -527,6 +546,7 @@ namespace SS
                 //Evaluating the formula can result in a double or a FormulaError
                 if (eval is double)
                 {
+                    
                     double result = (double)eval; 
                     return result;
                 }

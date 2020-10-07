@@ -1,15 +1,2 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<spreadsheet version="2.0">
-  <cell>
-    <name>C1</name>
-    <contents>5</contents>
-  </cell>
-  <cell>
-    <name>B1</name>
-    <contents>=C1*2</contents>
-  </cell>
-  <cell>
-    <name>A1</name>
-    <contents>=B1*2</contents>
-  </cell>
-</spreadsheet>
+<spreadsheet version="1.0" />
