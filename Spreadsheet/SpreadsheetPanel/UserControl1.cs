@@ -2,14 +2,13 @@
 // PS6Skeleton starter code provided by Daniel Kopta 2020.
 // Revised by Camille van Ginkel for PS6 assignment for CS 3500, October 2020
 
-
 using SpreadsheetUtilities;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using System.Xml.Schema;
+
 
 namespace SS
 {
@@ -60,9 +59,7 @@ namespace SS
         private const int COL_COUNT = 26;
         private const int ROW_COUNT = 99;
 
-        //the model of this spreadsheet panel that tracks cell contents, values, dependencies, etc.
         private Spreadsheet sp;
-
 
         /// <summary>
         /// Creates an empty SpreadsheetPanel
@@ -73,7 +70,6 @@ namespace SS
 
             InitializeComponent();
 
-            
             // The DrawingPanel is quite large, since it has 26 columns and 99 rows.  The
             // SpreadsheetPanel itself will usually be smaller, which is why scroll bars
             // are necessary.
@@ -100,9 +96,17 @@ namespace SS
             hScroll.Scroll += drawingPanel.HandleHScroll;
             vScroll.Scroll += drawingPanel.HandleVScroll;
 
+
             string varpattern = @"^[A-Z]([1-9]|[1-9][1-9])$";
             sp = new Spreadsheet(s => Regex.IsMatch(s, varpattern), s => s, "1.00.00");
         }
+
+        public bool IsValid(string token)
+        {
+            string varpattern = @"^[A-Z]([1-9]|[1-9][1-9])$";
+            return Regex.IsMatch(token, varpattern);
+        }
+
 
 
         /// <summary>
@@ -114,7 +118,37 @@ namespace SS
             drawingPanel.Clear();
         }
 
+        public void Save(string filename)
+        {
+            sp.Save(filename);
+        }
+        public bool IsChanged()
+        {
+            return sp.Changed;
+        }
 
+        public void OpenSpreadsheet(String filename)
+        {
+            string version = sp.GetSavedVersion(filename);
+            sp = new Spreadsheet(filename, IsValid, s => s, version);
+            foreach (string cell in sp.GetNamesOfAllNonemptyCells())
+            {
+                UpdateValueOfCellOnGrid(cell);
+            }
+        }
+
+        public void UpdateValueOfCellOnGrid(string cellName)
+        {
+            object CellValue = sp.GetCellValue(cellName);
+            if (CellValue is FormulaError)
+            {
+                CellValue = "FormulaError";
+            }
+            int CellCol;
+            int CellRow;
+            GetCellRowAndCol(cellName, out CellCol, out CellRow);
+            drawingPanel.SetValue(CellCol, CellRow, CellValue.ToString());
+        }
         /// <summary>
         /// If the zero-based column and row are in range, sets the value of that
         /// cell and returns true.  Otherwise, returns false.
@@ -127,25 +161,17 @@ namespace SS
         public bool SetContents(int col, int row, string contents)
         {
             string name = this.GetCellName(col, row);
-                IList<string> dependents = sp.SetContentsOfCell(name, contents); //could throw circularArgument
-                foreach (string cell in dependents)
-                {
-                    object CellValue = sp.GetCellValue(cell);
-                    if (CellValue is FormulaError)
-                    {
-                        CellValue = "FormulaError";
-                    }
-                    int CellCol;
-                    int CellRow;
-                    GetCellRowAndCol(cell, out CellCol, out CellRow);
-                    drawingPanel.SetValue(CellCol, CellRow, CellValue.ToString());
-                }
-                object value = sp.GetCellValue(name);
-                if (value is FormulaError)
-                {
-                    value = "FormulaError";
-                }
-                return drawingPanel.SetValue(col, row, value.ToString());
+            IList<string> dependents = sp.SetContentsOfCell(name, contents); //could throw circularArgument
+            foreach (string cell in dependents)
+            {
+                UpdateValueOfCellOnGrid(cell);
+            }
+            object value = sp.GetCellValue(name);
+            if (value is FormulaError)
+            {
+                value = "FormulaError";
+            }
+            return drawingPanel.SetValue(col, row, value.ToString());
         }
 
         private void GetCellRowAndCol(string name, out int col, out int row)
@@ -154,8 +180,8 @@ namespace SS
             double column = Convert.ToInt32(letter);
             column = column - 64;
             string num = name.Substring(1);
-            col = int.Parse(column.ToString()) -1;
-            row = int.Parse(num) -1;
+            col = int.Parse(column.ToString()) - 1;
+            row = int.Parse(num) - 1;
         }
 
 
@@ -255,7 +281,7 @@ namespace SS
             {
                 return "Error Occured in Panel";
             }
-            
+
         }
         public string GetCellContents()
         {
@@ -269,7 +295,7 @@ namespace SS
             {
                 return "Error Occured in Panel";
             }
-                
+
         }
 
         /// <summary>

@@ -47,19 +47,28 @@ namespace SpreadsheetGUI
             //Tell the application context to run the form on the same
             // thread as the other forms.
             //Application.getApp
-            //SpreadsheetApplicationContext.getAppContext().RunForm(new Form1());
+            SpreadsheetApplicationContext.getAppContext().RunForm(new Form1());
         }
 
         // Deals with the Close menu
         private void OpenMenuItem_Click(object sender, EventArgs e)
         {
-            //OpenFileDialogBox
+            openFileDialog1.ShowDialog();
+            spreadsheetPanel1.OpenSpreadsheet(openFileDialog1.FileName);
         }
 
         private void CloseMenuItem_Click(object sender, EventArgs e)
         {
             //close Window
-            Close();
+            if (spreadsheetPanel1.IsChanged())
+            {
+                MessageBox.Show("Not all changes have been saved.  Please save file before closing");
+            }
+            else
+            {
+                Close();
+            }
+            
         }
 
         /// <summary>
@@ -133,6 +142,30 @@ namespace SpreadsheetGUI
 
         }
 
-        
+        private void SaveMenuItem_Click(object sender, EventArgs e)
+        {
+            saveFileDialog1.DefaultExt = ".sprd";
+            saveFileDialog1.ShowDialog();
+            string name = saveFileDialog1.FileName;
+            spreadsheetPanel1.Save(name);
+        }
+
+        private void Form1_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            //close Window
+            if (spreadsheetPanel1.IsChanged())
+            {
+                // Display a MsgBox asking the user to save changes or abort.
+                if (MessageBox.Show("Do you want to save changes to your text?", "My Application",
+                   MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    // Cancel the Closing event from closing the form.
+                    e.Cancel = true;
+                    // Call method to save file...
+                }
+
+            }
+            
+        }
     }
 }

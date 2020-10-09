@@ -35,6 +35,7 @@ namespace SpreadsheetGUI
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.NewMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.SaveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.OpenMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.CloseMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.SettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -46,7 +47,8 @@ namespace SpreadsheetGUI
             this.ContentsTextBox = new System.Windows.Forms.TextBox();
             this.CellNameTextBox = new System.Windows.Forms.TextBox();
             this.spreadsheetPanel1 = new SS.SpreadsheetPanel();
-            this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip1.SuspendLayout();
             this.LowerContentsPanel.SuspendLayout();
             this.SuspendLayout();
@@ -68,6 +70,7 @@ namespace SpreadsheetGUI
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.NewMenuItem,
+            this.SaveMenuItem,
             this.OpenMenuItem,
             this.CloseMenuItem,
             this.SettingsMenuItem});
@@ -81,6 +84,13 @@ namespace SpreadsheetGUI
             this.NewMenuItem.Size = new System.Drawing.Size(235, 44);
             this.NewMenuItem.Text = "New";
             this.NewMenuItem.Click += new System.EventHandler(this.NewMenuItem_Click_1);
+            // 
+            // SaveMenuItem
+            // 
+            this.SaveMenuItem.Name = "SaveMenuItem";
+            this.SaveMenuItem.Size = new System.Drawing.Size(235, 44);
+            this.SaveMenuItem.Text = "Save";
+            this.SaveMenuItem.Click += new System.EventHandler(this.SaveMenuItem_Click);
             // 
             // OpenMenuItem
             // 
@@ -125,7 +135,6 @@ namespace SpreadsheetGUI
             // 
             // LowerContentsPanel
             // 
-            this.LowerContentsPanel.Controls.Add(this.vScrollBar1);
             this.LowerContentsPanel.Controls.Add(this.ValueTextBox);
             this.LowerContentsPanel.Controls.Add(this.ContentsTextBox);
             this.LowerContentsPanel.Controls.Add(this.CellNameTextBox);
@@ -180,13 +189,9 @@ namespace SpreadsheetGUI
             this.spreadsheetPanel1.Load += new System.EventHandler(this.spreadsheetPanel1_Load);
             this.spreadsheetPanel1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.spreadsheetPanel1_KeyDown);
             // 
-            // vScrollBar1
+            // openFileDialog1
             // 
-            this.vScrollBar1.Location = new System.Drawing.Point(812, 33);
-            this.vScrollBar1.Name = "vScrollBar1";
-            this.vScrollBar1.Size = new System.Drawing.Size(34, 160);
-            this.vScrollBar1.TabIndex = 5;
-            this.vScrollBar1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.spreadsheetPanel1_KeyDown);
+            this.openFileDialog1.FileName = "openFileDialog1";
             // 
             // Form1
             // 
@@ -198,6 +203,7 @@ namespace SpreadsheetGUI
             this.MainMenuStrip = this.menuStrip1;
             this.MinimumSize = new System.Drawing.Size(1048, 625);
             this.Name = "Form1";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_Closing);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.LowerContentsPanel.ResumeLayout(false);
@@ -223,7 +229,9 @@ namespace SpreadsheetGUI
         private System.Windows.Forms.TextBox ValueTextBox;
         private System.Windows.Forms.TextBox ContentsTextBox;
         private System.Windows.Forms.TextBox CellNameTextBox;
-        private VScrollBar vScrollBar1;
+        private OpenFileDialog openFileDialog1;
+        private ToolStripMenuItem SaveMenuItem;
+        private SaveFileDialog saveFileDialog1;
     }
 }
 
