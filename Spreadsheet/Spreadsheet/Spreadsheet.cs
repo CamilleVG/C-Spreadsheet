@@ -19,14 +19,14 @@ namespace SS
         /// Maps the name of a cell to a Cell object.  The cell object holds the value and contents of a cell.
         /// It only maps cells whose contents have been set.  It does not hold they keys of empty cells.
         /// </summary>
-        readonly Dictionary<string, Cell> spreadsheet;
+        private Dictionary<string, Cell> spreadsheet;
 
         /// <summary>
         /// Tracks the dependencies of the non-empty cells in spreadsheet in a DAG.
         /// If a cell "t" contents is set to a formula that contains a variable to another cell "s", then it is 
         /// said that "t" depends on "s". 
         /// </summary>
-        readonly DependencyGraph dg;
+        private DependencyGraph dg;
 
 
         /// <summary>
@@ -373,6 +373,7 @@ namespace SS
             foreach (string n in GetCellsToRecalculate(name))
             {
                 Dependents.Add(n);
+                spreadsheet[n].Recalculate(this.Lookup);
             }
             return Dependents;
         }
@@ -497,7 +498,6 @@ namespace SS
                     Dependents = SetCellContents(name, content);
                 }
             }
-            spreadsheet[name].SetContents(content);
             Changed = true;
             return Dependents;
         }
@@ -536,7 +536,7 @@ namespace SS
                 throw new ArgumentException();
             }
             //Otherwise, if the cell exists in spreadsheet
-            if (GetCellContents(variable) is Double) //If it is a double, return that double
+            if (GetCellValue(variable) is Double) //If it is a double, return that double
             {
                 return (double)spreadsheet[variable].Value;
             }

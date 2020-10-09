@@ -1,0 +1,15 @@
+Written by Camille van Ginkel for PS6 assignment for CS 3500, October 2020
+
+
+IMPLEMENTATION NOTES:
+	ENTRY: 10/07/2020
+
+	ENTRY: 10/07/2020
+
+	ENTRY: 10/08/2020
+
+	ENTRY: 10/09/2020
+
+SPREADSHEET GUI
+	ADDITIONAL FEATURES:
+	

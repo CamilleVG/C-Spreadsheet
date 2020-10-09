@@ -16,9 +16,14 @@ namespace Scratch
 
             String dollarPattern = "I saw ([0-9]|like, tons of) dogs today";
             String dollar = "I saw dogs today";
-            if (Regex.IsMatch(dollar, dollarPattern))
+
+            string varpattern = @"^[A-Z]([1-9]|[1-9][1-9])$";//([1 - 9] | 1[0 - 9] | 2[0 - 5])
+            string cell = "B66";
+
+
+            if (Regex.IsMatch(cell, varpattern))
             {
-                Console.WriteLine(dollar);
+                Console.WriteLine(cell + " matches");
             }
 
         }

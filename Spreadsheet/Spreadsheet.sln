@@ -19,11 +19,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpreadsheetTests", "Spreads
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Scratch", "Scratch\Scratch.csproj", "{2BF7416B-C3E0-4050-808C-E9F1B60EBB2D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpreadsheetStressTests", "SpreadsheetStressTests\SpreadsheetStressTests.csproj", "{A3879A78-6AAC-4B2F-BD46-122C44AB8508}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GradingTests", "SpreadsheetStressTests\GradingTests.csproj", "{A3879A78-6AAC-4B2F-BD46-122C44AB8508}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpreadsheetGUI", "SpreadsheetGUI\SpreadsheetGUI.csproj", "{4322C1BE-7FE0-431D-928C-85CD1B0FEE60}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpreadsheetPanel", "SpreadsheetPanel\SpreadsheetPanel.csproj", "{602FB685-6C98-41A2-AF21-FD1889F79549}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DB9C7288-3567-4EED-9A8D-63D3E9D61DC4}"
+	ProjectSection(SolutionItems) = preProject
+		README.txt = README.txt
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

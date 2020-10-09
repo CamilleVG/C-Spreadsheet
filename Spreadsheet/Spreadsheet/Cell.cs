@@ -8,7 +8,7 @@ namespace SS
     /// <summary>
     /// A Cell object represents a non-empty cell in a spreadsheet and has two member variables: contents and value.  
     /// </summary>
-    public class Cell
+    internal class Cell
     {
         /// <summary>
         /// <para>The input of the cell. </para> 
@@ -16,7 +16,7 @@ namespace SS
         /// It is private beacause contents of a cell should only be
         /// set by calling spreadsheets SetCellContents() method.
         /// </summary>
-        private object contents;
+        private string contents;
 
         /// <summary>
         /// <para>The value of the input of a cell.</para>
@@ -48,8 +48,9 @@ namespace SS
         /// <param name="Contents">The double number that was input into the cell.</param>
         public Cell(double Contents)
         {
-            contents = Contents;
             value = Contents;
+            contents = Contents.ToString();
+            
         }
 
         /// <summary>
@@ -59,7 +60,7 @@ namespace SS
         /// <param name="Lookup"> Lookup method to return the value of a cell(variable) is defined in spreadsheet</param>
         public Cell(Formula Contents, Func<string, double> Lookup)
         {
-            contents = Contents;
+            contents = "=" + Contents.ToString();
             value = Contents.Evaluate(Lookup);
         }
 
@@ -69,9 +70,10 @@ namespace SS
         /// </summary>
         public void Recalculate(Func<string, double> Lookup)
         {
-            if (this.Contents is Formula)
+            
+            if (contents[0].Equals('='))
             {
-                value = ((Formula)Contents).Evaluate(Lookup);
+                value = (new Formula(contents.Substring(1)).Evaluate(Lookup));
             }
             
         }
@@ -98,7 +100,14 @@ namespace SS
         /// <param name="input">The input of a cell.  It must be a double, Formula, or String.</param>
         public void SetContents(object input)
         {
-            contents = input;
+            if (input is Formula)
+            {
+                contents = "=" + input.ToString();
+            }
+            else
+            {
+                contents = input.ToString();
+            }
             if (input is string || input is double)
             {
                 value = input;

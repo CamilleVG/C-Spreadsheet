@@ -1,10 +1,15 @@
 ﻿// Written by Joe Zachary for CS 3500, September 2011.
+// PS6Skeleton starter code provided by Daniel Kopta 2020.
+// Revised by Camille van Ginkel for PS6 assignment for CS 3500, October 2020
 
+
+using SpreadsheetUtilities;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
-
+using System.Xml.Schema;
 
 namespace SS
 {
@@ -55,8 +60,10 @@ namespace SS
         private const int COL_COUNT = 26;
         private const int ROW_COUNT = 99;
 
-
+        //the model of this spreadsheet panel that tracks cell contents, values, dependencies, etc.
         private Spreadsheet sp;
+
+
         /// <summary>
         /// Creates an empty SpreadsheetPanel
         /// </summary>
@@ -65,8 +72,8 @@ namespace SS
         {
 
             InitializeComponent();
-            sp = new Spreadsheet();
 
+            
             // The DrawingPanel is quite large, since it has 26 columns and 99 rows.  The
             // SpreadsheetPanel itself will usually be smaller, which is why scroll bars
             // are necessary.
@@ -93,6 +100,8 @@ namespace SS
             hScroll.Scroll += drawingPanel.HandleHScroll;
             vScroll.Scroll += drawingPanel.HandleVScroll;
 
+            string varpattern = @"^[A-Z]([1-9]|[1-9][1-9])$";
+            sp = new Spreadsheet(s => Regex.IsMatch(s, varpattern), s => s, "1.00.00");
         }
 
 
@@ -118,9 +127,35 @@ namespace SS
         public bool SetContents(int col, int row, string contents)
         {
             string name = this.GetCellName(col, row);
-            sp.SetContentsOfCell(name, contents);
-            object value = sp.GetCellValue(name);
-            return drawingPanel.SetValue(col, row, value.ToString());
+                IList<string> dependents = sp.SetContentsOfCell(name, contents); //could throw circularArgument
+                foreach (string cell in dependents)
+                {
+                    object CellValue = sp.GetCellValue(cell);
+                    if (CellValue is FormulaError)
+                    {
+                        CellValue = "FormulaError";
+                    }
+                    int CellCol;
+                    int CellRow;
+                    GetCellRowAndCol(cell, out CellCol, out CellRow);
+                    drawingPanel.SetValue(CellCol, CellRow, CellValue.ToString());
+                }
+                object value = sp.GetCellValue(name);
+                if (value is FormulaError)
+                {
+                    value = "FormulaError";
+                }
+                return drawingPanel.SetValue(col, row, value.ToString());
+        }
+
+        private void GetCellRowAndCol(string name, out int col, out int row)
+        {
+            char letter = name[0];
+            double column = Convert.ToInt32(letter);
+            column = column - 64;
+            string num = name.Substring(1);
+            col = int.Parse(column.ToString()) -1;
+            row = int.Parse(num) -1;
         }
 
 
@@ -165,29 +200,56 @@ namespace SS
         {
             drawingPanel.GetSelection(out col, out row);
         }
+
+        /// <summary>
+        /// Gets the name of the cell that is currently selected in the spreadsheet panel
+        /// </summary>
+        /// <returns>The name of the current selected cell</returns>
         public string GetCellName()
         {
             int col, row;
             drawingPanel.GetSelection(out col, out row);
+            col += 1;
+            row += 1;
             int unicode = col + 64;
-            string columnLetter = (Convert.ToChar(65)).ToString();
-            String name = columnLetter + row;
-            return name;
-        }
-        public string GetCellName(int col, int row)
-        {
-            int unicode = col + 64;
-            string columnLetter = (Convert.ToChar(65)).ToString();
+            string columnLetter = (Convert.ToChar(unicode)).ToString();
             String name = columnLetter + row;
             return name;
         }
 
+        /// <summary>
+        /// Gets the name of any cell given the location it is in the grid of the spreadsheet panel.
+        /// The column number is converted to the letter that represents that column.  The cell name 
+        /// is returned as a string concatenating the column letter and row number.  
+        /// </summary>
+        /// <param name="col">Collumn of cell in grid</param>
+        /// <param name="row">Row of cell in grid</param>
+        /// <returns>Name of cell</returns>
+        public string GetCellName(int col, int row)
+        {
+            col += 1;
+            row += 1;
+            int unicode = col + 64;
+            string columnLetter = (Convert.ToChar(unicode)).ToString();
+            String name = columnLetter + row;
+            return name;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public Object GetCellValue()
         {
             try
             {
                 String name = GetCellName();
-                return sp.GetCellValue(name);
+                object value = sp.GetCellValue(name);
+                if (value is FormulaError)
+                {
+                    value = "FormulaError";
+                }
+                return value;
             }
             catch
             {
