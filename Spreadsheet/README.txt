@@ -20,16 +20,23 @@ IMPLEMENTATION NOTES:
 		Time Worked: 10 hours
 		Arrow keys control scroll bars on form.  Need to figure how to use arrows exclusively for cell selection.
 		All Menu items have been set except for Settings.  Need to figure out how to edit FileDialog.
-		Need to add my special feature
-
-		Design Decision:  The window size is not adjustable (other than minimize window and minimize window)
-		Design Decision:  
+		Couldn't quite figure out how to set the autosize of the spreadsheet,  I feel it's still a little wonky.
+		Need to add my special feature.
+		
 	
 	ENTRY: 10/09/2020
-		Time Worked: 
-		Design Decision: 
+		Time Worked: 5 hours ... 
+		I spent at lest 2 hours accidently breaking sizing layout of spreadsheetpanel1 and fixing it.  So I am just accepting
+		that when you resize the spreadsheet downwards or maximize the screen, it does not adjust to the size of the screen vertically. :/
+		
+		Design Decision: The Help menu contains common questions.  Then if you click on one of the questions, a message dialog 
+		will popup explaining the answer.  I did this because the speadsheet is not particularly complicated. I could also have made a manual with
+		one big text explaining all instructions and features of the spreadsheet, 
 		
 
 SPREADSHEET GUI
 	ADDITIONAL FEATURES:
-	SPECIAL INSTRUCTIONS:
+		If you click on file menu, then on tools, then on Change colors of grid.  The color of the Grid will update to the color you selected.
+
+		There is also a print option.  However, I did not have enough time handle creating a document file with spreadsheet contents to print.
+		So if you click print it will print a blank document.  :/

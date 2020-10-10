@@ -21,8 +21,6 @@ namespace SS
 
     public delegate void SelectionChangedHandler(SpreadsheetPanel sender);
 
-
-
     /// <summary>
     /// A panel that displays a spreadsheet with 26 columns (labeled A-Z) and 99 rows
     /// (labeled 1-99).  Each cell on the grid can display a non-editable string.  One 
@@ -59,7 +57,9 @@ namespace SS
         private const int COL_COUNT = 26;
         private const int ROW_COUNT = 99;
 
+        //the spreadsheet model that tracks dependencies, evaluates forulats, holds contents and values of cells, etc.
         private Spreadsheet sp;
+
 
         /// <summary>
         /// Creates an empty SpreadsheetPanel
@@ -96,14 +96,23 @@ namespace SS
             hScroll.Scroll += drawingPanel.HandleHScroll;
             vScroll.Scroll += drawingPanel.HandleVScroll;
 
+            // The spreadsheet model that tracks dependencies, stores contents of cells, and calculates values etc.
+            sp = new Spreadsheet(s => IsValid(s), s => s, "1.00.00");
 
-            string varpattern = @"^[A-Z]([1-9]|[1-9][1-9])$";
-            sp = new Spreadsheet(s => Regex.IsMatch(s, varpattern), s => s, "1.00.00");
+            
         }
 
+        /// <summary>
+        /// The validator method that is passed into the spreadsheet constructor.
+        /// IsValid checks that all cell names must begin with a captiol letter in the range A-Z inclusive
+        /// and must end with a nummber in the range of 1-99 inclusive.  This is because the spreadsheetpanel1
+        /// view only has 26 columns corresponding to the alphabet, and 99 rows.  
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns>True if cell name is valid.  False otherwise.</returns>
         public bool IsValid(string token)
         {
-            string varpattern = @"^[A-Z]([1-9]|[1-9][1-9])$";
+            string varpattern = @"^[A-Z]([1-9]|[1-9][0-9])$";
             return Regex.IsMatch(token, varpattern);
         }
 
@@ -112,23 +121,56 @@ namespace SS
         /// <summary>
         /// Clears the display.
         /// </summary>
-
         public void Clear()
         {
             drawingPanel.Clear();
         }
 
+        /// <summary>
+        /// This gives the information about the color the user selected in the Form to the drawing panel.
+        /// </summary>
+        /// <param name="color"></param>
+        public void GetColor(System.Drawing.Color color)
+        {
+            drawingPanel.penColor = color;
+        }
+
+       
+
+        /// <summary>
+        /// Saves the information of this spreadsheet to the file passed in by filename.
+        /// Allos the view to save a file to the file chosen by user.
+        /// </summary>
+        /// <param name="filename"></param>
         public void Save(string filename)
         {
             sp.Save(filename);
         }
+
+        /// <summary>
+        /// Returns whether the contents of a spreadsheet has been changed since it was last created or saved.
+        /// Gives access to the view, to determine when to pop up warning message.
+        /// </summary>
+        /// <returns></returns>
         public bool IsChanged()
         {
             return sp.Changed;
         }
 
-        public void OpenSpreadsheet(String filename)
+        /// <summary>
+        /// Given a file that the user as chosen  to open in view, OpenSpreadsheet updates the values and 
+        /// contents of the this spreadsheet in the window to be that of the selected file. 
+        /// </summary>
+        /// <param name="filename"></param>
+        public void Open(String filename)
         {
+            foreach (string cell in sp.GetNamesOfAllNonemptyCells())
+            {
+                int CellCol;
+                int CellRow;
+                GetCellRowAndCol(cell, out CellCol, out CellRow);
+                drawingPanel.SetValue(CellCol, CellRow, "");
+            }
             string version = sp.GetSavedVersion(filename);
             sp = new Spreadsheet(filename, IsValid, s => s, version);
             foreach (string cell in sp.GetNamesOfAllNonemptyCells())
@@ -136,8 +178,55 @@ namespace SS
                 UpdateValueOfCellOnGrid(cell);
             }
         }
+        /// <summary>
+        /// Gets the name of the cell that is currently selected in the spreadsheet panel.
+        /// For example, if selected cell is in column 2 and row 3, the cell name is "B3"
+        /// </summary>
+        /// <returns>The name of the current selected cell</returns>
+        public string GetCellName()
+        {
+            int col, row;
+            drawingPanel.GetSelection(out col, out row);
+            col += 1;
+            row += 1;
+            int unicode = col + 64;
+            string columnLetter = (Convert.ToChar(unicode)).ToString();
+            String name = columnLetter + row;
+            return name;
+        }
 
-        public void UpdateValueOfCellOnGrid(string cellName)
+        /// <summary>
+        /// Gets the value of the cell currrently selected in spreadsheet.
+        /// </summary>
+        /// <returns></returns>
+        public Object GetCellValue()
+        {
+            String name = GetCellName();
+            object value = sp.GetCellValue(name);
+            if (value is FormulaError)
+            {
+                value = "FormulaError";  //I want FormulaError to appear in cell, not "SpreadsheetUtilities.FormulaError"
+            }
+            return value;
+        }
+
+        /// <summary>
+        /// Gets the contents of the cell currently selected in spreadsheet.
+        /// </summary>
+        /// <returns></returns>
+        public string GetCellContents()
+        {
+            String name = GetCellName();
+            string contents = (string)sp.GetCellContents(name);
+            return contents;
+        }
+
+        /// <summary>
+        /// Helper method:
+        /// Updates the of a value of a cell that is displayed in this spreadsheet panel
+        /// </summary>
+        /// <param name="cellName"></param>
+        private void UpdateValueOfCellOnGrid(string cellName)
         {
             object CellValue = sp.GetCellValue(cellName);
             if (CellValue is FormulaError)
@@ -149,6 +238,26 @@ namespace SS
             GetCellRowAndCol(cellName, out CellCol, out CellRow);
             drawingPanel.SetValue(CellCol, CellRow, CellValue.ToString());
         }
+
+        /// <summary>
+        /// Helper method:
+        /// Given the name of a cell, it updates the column and row passed in references to hold the
+        /// column numnber and row number respectively of the cell.
+        /// Gets row and col of a cell given the cell name.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="col"></param>
+        /// <param name="row"></param>
+        private void GetCellRowAndCol(string name, out int col, out int row)
+        {
+            char letter = name[0];
+            double column = Convert.ToInt32(letter);
+            column = column - 64;
+            string num = name.Substring(1);
+            col = int.Parse(column.ToString()) - 1;
+            row = int.Parse(num) - 1;
+        }
+
         /// <summary>
         /// If the zero-based column and row are in range, sets the value of that
         /// cell and returns true.  Otherwise, returns false.
@@ -157,10 +266,9 @@ namespace SS
         /// <param name="row"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-
-        public bool SetContents(int col, int row, string contents)
+        public bool SetContents(string contents)
         {
-            string name = this.GetCellName(col, row);
+            string name = this.GetCellName();
             IList<string> dependents = sp.SetContentsOfCell(name, contents); //could throw circularArgument
             foreach (string cell in dependents)
             {
@@ -171,17 +279,9 @@ namespace SS
             {
                 value = "FormulaError";
             }
+            int row, col;
+            this.GetSelection(out col, out row);
             return drawingPanel.SetValue(col, row, value.ToString());
-        }
-
-        private void GetCellRowAndCol(string name, out int col, out int row)
-        {
-            char letter = name[0];
-            double column = Convert.ToInt32(letter);
-            column = column - 64;
-            string num = name.Substring(1);
-            col = int.Parse(column.ToString()) - 1;
-            row = int.Parse(num) - 1;
         }
 
 
@@ -225,77 +325,6 @@ namespace SS
         public void GetSelection(out int col, out int row)
         {
             drawingPanel.GetSelection(out col, out row);
-        }
-
-        /// <summary>
-        /// Gets the name of the cell that is currently selected in the spreadsheet panel
-        /// </summary>
-        /// <returns>The name of the current selected cell</returns>
-        public string GetCellName()
-        {
-            int col, row;
-            drawingPanel.GetSelection(out col, out row);
-            col += 1;
-            row += 1;
-            int unicode = col + 64;
-            string columnLetter = (Convert.ToChar(unicode)).ToString();
-            String name = columnLetter + row;
-            return name;
-        }
-
-        /// <summary>
-        /// Gets the name of any cell given the location it is in the grid of the spreadsheet panel.
-        /// The column number is converted to the letter that represents that column.  The cell name 
-        /// is returned as a string concatenating the column letter and row number.  
-        /// </summary>
-        /// <param name="col">Collumn of cell in grid</param>
-        /// <param name="row">Row of cell in grid</param>
-        /// <returns>Name of cell</returns>
-        public string GetCellName(int col, int row)
-        {
-            col += 1;
-            row += 1;
-            int unicode = col + 64;
-            string columnLetter = (Convert.ToChar(unicode)).ToString();
-            String name = columnLetter + row;
-            return name;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public Object GetCellValue()
-        {
-            try
-            {
-                String name = GetCellName();
-                object value = sp.GetCellValue(name);
-                if (value is FormulaError)
-                {
-                    value = "FormulaError";
-                }
-                return value;
-            }
-            catch
-            {
-                return "Error Occured in Panel";
-            }
-
-        }
-        public string GetCellContents()
-        {
-            try
-            {
-                String name = GetCellName();
-                string contents = (string)sp.GetCellContents(name);
-                return contents;
-            }
-            catch
-            {
-                return "Error Occured in Panel";
-            }
-
         }
 
         /// <summary>
@@ -377,14 +406,26 @@ namespace SS
             // The containing panel
             private SpreadsheetPanel _ssp;
 
+            public System.Drawing.Color penColor;
 
             public DrawingPanel(SpreadsheetPanel ss)
             {
                 DoubleBuffered = true;
                 _values = new Dictionary<Address, String>();
                 _ssp = ss;
+
+                //Color of grid and selection that can be adjusted by user
+                penColor = System.Drawing.Color.Black;
             }
 
+            /// <summary>
+            /// Call this method to update the color of the pen to the most recent color that the user selected.
+            /// </summary>
+            /// <returns></returns>
+            public System.Drawing.Color ColorGrid()
+            {
+                return penColor;
+            }
 
             private bool InvalidAddress(int col, int row)
             {
@@ -398,6 +439,7 @@ namespace SS
                 Invalidate();
             }
 
+            
 
             public bool SetValue(int col, int row, string c)
             {
@@ -486,6 +528,7 @@ namespace SS
                 // Pen, brush, and fonts to use
                 Brush brush = new SolidBrush(Color.Black);
                 Pen pen = new Pen(brush);
+                pen.Color = ColorGrid();
                 Font regularFont = Font;
                 Font boldFont = new Font(regularFont, FontStyle.Bold);
 

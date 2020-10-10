@@ -39,9 +39,16 @@ namespace SpreadsheetGUI
             this.OpenMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.CloseMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.SettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.option1MenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.option2MenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.changeGridColorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.PrintMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.howToChangeContentsOfCellToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.howToEnterAFormulaIntoACellToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.howToCreateNewSpreadsheetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.howToOpenAPreexisitngSpreadsheetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.howToCloseProgramToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.howToSaveFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.howToChangeTheColorOfTheGridLinesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.LowerContentsPanel = new System.Windows.Forms.Panel();
             this.ValueTextBox = new System.Windows.Forms.TextBox();
             this.ContentsTextBox = new System.Windows.Forms.TextBox();
@@ -49,6 +56,9 @@ namespace SpreadsheetGUI
             this.spreadsheetPanel1 = new SS.SpreadsheetPanel();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.printDialog1 = new System.Windows.Forms.PrintDialog();
+            this.printDocument1 = new System.Drawing.Printing.PrintDocument();
+            this.colorDialog1 = new System.Windows.Forms.ColorDialog();
             this.menuStrip1.SuspendLayout();
             this.LowerContentsPanel.SuspendLayout();
             this.SuspendLayout();
@@ -62,7 +72,7 @@ namespace SpreadsheetGUI
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1022, 40);
+            this.menuStrip1.Size = new System.Drawing.Size(2000, 40);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -73,7 +83,8 @@ namespace SpreadsheetGUI
             this.SaveMenuItem,
             this.OpenMenuItem,
             this.CloseMenuItem,
-            this.SettingsMenuItem});
+            this.SettingsMenuItem,
+            this.PrintMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(72, 36);
             this.fileToolStripMenuItem.Text = "File";
@@ -81,66 +92,122 @@ namespace SpreadsheetGUI
             // NewMenuItem
             // 
             this.NewMenuItem.Name = "NewMenuItem";
-            this.NewMenuItem.Size = new System.Drawing.Size(235, 44);
+            this.NewMenuItem.Size = new System.Drawing.Size(208, 44);
             this.NewMenuItem.Text = "New";
             this.NewMenuItem.Click += new System.EventHandler(this.NewMenuItem_Click_1);
             // 
             // SaveMenuItem
             // 
             this.SaveMenuItem.Name = "SaveMenuItem";
-            this.SaveMenuItem.Size = new System.Drawing.Size(235, 44);
+            this.SaveMenuItem.Size = new System.Drawing.Size(208, 44);
             this.SaveMenuItem.Text = "Save";
             this.SaveMenuItem.Click += new System.EventHandler(this.SaveMenuItem_Click);
             // 
             // OpenMenuItem
             // 
             this.OpenMenuItem.Name = "OpenMenuItem";
-            this.OpenMenuItem.Size = new System.Drawing.Size(235, 44);
+            this.OpenMenuItem.Size = new System.Drawing.Size(208, 44);
             this.OpenMenuItem.Text = "Open";
             this.OpenMenuItem.Click += new System.EventHandler(this.OpenMenuItem_Click);
             // 
             // CloseMenuItem
             // 
             this.CloseMenuItem.Name = "CloseMenuItem";
-            this.CloseMenuItem.Size = new System.Drawing.Size(235, 44);
+            this.CloseMenuItem.Size = new System.Drawing.Size(208, 44);
             this.CloseMenuItem.Text = "Close";
             this.CloseMenuItem.Click += new System.EventHandler(this.CloseMenuItem_Click);
             // 
             // SettingsMenuItem
             // 
             this.SettingsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.option1MenuItem,
-            this.option2MenuItem});
+            this.changeGridColorToolStripMenuItem});
             this.SettingsMenuItem.Name = "SettingsMenuItem";
-            this.SettingsMenuItem.Size = new System.Drawing.Size(235, 44);
-            this.SettingsMenuItem.Text = "Settings";
+            this.SettingsMenuItem.Size = new System.Drawing.Size(208, 44);
+            this.SettingsMenuItem.Text = "Tools";
             // 
-            // option1MenuItem
+            // changeGridColorToolStripMenuItem
             // 
-            this.option1MenuItem.Name = "option1MenuItem";
-            this.option1MenuItem.Size = new System.Drawing.Size(236, 44);
-            this.option1MenuItem.Text = "Option1";
+            this.changeGridColorToolStripMenuItem.Name = "changeGridColorToolStripMenuItem";
+            this.changeGridColorToolStripMenuItem.Size = new System.Drawing.Size(346, 44);
+            this.changeGridColorToolStripMenuItem.Text = "Change Grid Color";
+            this.changeGridColorToolStripMenuItem.Click += new System.EventHandler(this.changeGridColorToolStripMenuItem_Click);
             // 
-            // option2MenuItem
+            // PrintMenuItem
             // 
-            this.option2MenuItem.Name = "option2MenuItem";
-            this.option2MenuItem.Size = new System.Drawing.Size(236, 44);
-            this.option2MenuItem.Text = "Option2";
+            this.PrintMenuItem.Name = "PrintMenuItem";
+            this.PrintMenuItem.Size = new System.Drawing.Size(208, 44);
+            this.PrintMenuItem.Text = "Print";
+            this.PrintMenuItem.Click += new System.EventHandler(this.PrintMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
+            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.howToChangeContentsOfCellToolStripMenuItem,
+            this.howToEnterAFormulaIntoACellToolStripMenuItem,
+            this.howToCreateNewSpreadsheetToolStripMenuItem,
+            this.howToOpenAPreexisitngSpreadsheetToolStripMenuItem,
+            this.howToCloseProgramToolStripMenuItem,
+            this.howToSaveFileToolStripMenuItem,
+            this.howToChangeTheColorOfTheGridLinesToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(85, 36);
             this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // howToChangeContentsOfCellToolStripMenuItem
+            // 
+            this.howToChangeContentsOfCellToolStripMenuItem.Name = "howToChangeContentsOfCellToolStripMenuItem";
+            this.howToChangeContentsOfCellToolStripMenuItem.Size = new System.Drawing.Size(600, 44);
+            this.howToChangeContentsOfCellToolStripMenuItem.Text = "How to change contents of cell?";
+            this.howToChangeContentsOfCellToolStripMenuItem.Click += new System.EventHandler(this.howToChangeContentsOfCellToolStripMenuItem_Click);
+            // 
+            // howToEnterAFormulaIntoACellToolStripMenuItem
+            // 
+            this.howToEnterAFormulaIntoACellToolStripMenuItem.Name = "howToEnterAFormulaIntoACellToolStripMenuItem";
+            this.howToEnterAFormulaIntoACellToolStripMenuItem.Size = new System.Drawing.Size(600, 44);
+            this.howToEnterAFormulaIntoACellToolStripMenuItem.Text = "How to enter a formula into a cell?";
+            this.howToEnterAFormulaIntoACellToolStripMenuItem.Click += new System.EventHandler(this.howToEnterAFormulaIntoACellToolStripMenuItem_Click);
+            // 
+            // howToCreateNewSpreadsheetToolStripMenuItem
+            // 
+            this.howToCreateNewSpreadsheetToolStripMenuItem.Name = "howToCreateNewSpreadsheetToolStripMenuItem";
+            this.howToCreateNewSpreadsheetToolStripMenuItem.Size = new System.Drawing.Size(600, 44);
+            this.howToCreateNewSpreadsheetToolStripMenuItem.Text = "How to create new spreadsheet?";
+            this.howToCreateNewSpreadsheetToolStripMenuItem.Click += new System.EventHandler(this.howToCreateNewSpreadsheetToolStripMenuItem_Click);
+            // 
+            // howToOpenAPreexisitngSpreadsheetToolStripMenuItem
+            // 
+            this.howToOpenAPreexisitngSpreadsheetToolStripMenuItem.Name = "howToOpenAPreexisitngSpreadsheetToolStripMenuItem";
+            this.howToOpenAPreexisitngSpreadsheetToolStripMenuItem.Size = new System.Drawing.Size(600, 44);
+            this.howToOpenAPreexisitngSpreadsheetToolStripMenuItem.Text = "How to open a pre-exisitng spreadsheet?";
+            this.howToOpenAPreexisitngSpreadsheetToolStripMenuItem.Click += new System.EventHandler(this.howToOpenAPreexisitngSpreadsheetToolStripMenuItem_Click);
+            // 
+            // howToCloseProgramToolStripMenuItem
+            // 
+            this.howToCloseProgramToolStripMenuItem.Name = "howToCloseProgramToolStripMenuItem";
+            this.howToCloseProgramToolStripMenuItem.Size = new System.Drawing.Size(600, 44);
+            this.howToCloseProgramToolStripMenuItem.Text = "How to close program?";
+            this.howToCloseProgramToolStripMenuItem.Click += new System.EventHandler(this.howToCloseProgramToolStripMenuItem_Click);
+            // 
+            // howToSaveFileToolStripMenuItem
+            // 
+            this.howToSaveFileToolStripMenuItem.Name = "howToSaveFileToolStripMenuItem";
+            this.howToSaveFileToolStripMenuItem.Size = new System.Drawing.Size(600, 44);
+            this.howToSaveFileToolStripMenuItem.Text = "How to save file?";
+            this.howToSaveFileToolStripMenuItem.Click += new System.EventHandler(this.howToSaveFileToolStripMenuItem_Click);
+            // 
+            // howToChangeTheColorOfTheGridLinesToolStripMenuItem
+            // 
+            this.howToChangeTheColorOfTheGridLinesToolStripMenuItem.Name = "howToChangeTheColorOfTheGridLinesToolStripMenuItem";
+            this.howToChangeTheColorOfTheGridLinesToolStripMenuItem.Size = new System.Drawing.Size(600, 44);
+            this.howToChangeTheColorOfTheGridLinesToolStripMenuItem.Text = "How to change the color of the grid lines?";
+            this.howToChangeTheColorOfTheGridLinesToolStripMenuItem.Click += new System.EventHandler(this.howToChangeTheColorOfTheGridLinesToolStripMenuItem_Click);
             // 
             // LowerContentsPanel
             // 
             this.LowerContentsPanel.Controls.Add(this.ValueTextBox);
             this.LowerContentsPanel.Controls.Add(this.ContentsTextBox);
             this.LowerContentsPanel.Controls.Add(this.CellNameTextBox);
-            this.LowerContentsPanel.Controls.Add(this.spreadsheetPanel1);
-            this.LowerContentsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.LowerContentsPanel.Location = new System.Drawing.Point(0, 40);
+            this.LowerContentsPanel.Location = new System.Drawing.Point(0, 43);
             this.LowerContentsPanel.Name = "LowerContentsPanel";
             this.LowerContentsPanel.Size = new System.Drawing.Size(1022, 514);
             this.LowerContentsPanel.TabIndex = 3;
@@ -179,30 +246,41 @@ namespace SpreadsheetGUI
             // 
             // spreadsheetPanel1
             // 
-            this.spreadsheetPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.spreadsheetPanel1.AutoSize = true;
-            this.spreadsheetPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.spreadsheetPanel1.Location = new System.Drawing.Point(0, 119);
+            this.spreadsheetPanel1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.spreadsheetPanel1.Location = new System.Drawing.Point(0, 1059);
+            this.spreadsheetPanel1.Margin = new System.Windows.Forms.Padding(6);
             this.spreadsheetPanel1.Name = "spreadsheetPanel1";
-            this.spreadsheetPanel1.Size = new System.Drawing.Size(1022, 395);
+            this.spreadsheetPanel1.Size = new System.Drawing.Size(2000, 700);
             this.spreadsheetPanel1.TabIndex = 0;
-            this.spreadsheetPanel1.Load += new System.EventHandler(this.spreadsheetPanel1_Load);
-            this.spreadsheetPanel1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.spreadsheetPanel1_KeyDown);
             // 
             // openFileDialog1
             // 
-            this.openFileDialog1.FileName = "openFileDialog1";
+            this.openFileDialog1.Filter = "Spreadsheet files (*.sprd)|*.sprd|All files (*.*)|*.*";
+            // 
+            // saveFileDialog1
+            // 
+            this.saveFileDialog1.DefaultExt = "sprd";
+            this.saveFileDialog1.Filter = "Spreadsheet files (*.sprd)|*.sprd|All files (*.*)|*.*";
+            // 
+            // printDialog1
+            // 
+            this.printDialog1.UseEXDialog = true;
+            // 
+            // printDocument1
+            // 
             // 
             // Form1
             // 
-            this.AutoSize = true;
-            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(1022, 554);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(2000, 1759);
+            this.Controls.Add(this.spreadsheetPanel1);
             this.Controls.Add(this.LowerContentsPanel);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
-            this.MinimumSize = new System.Drawing.Size(1048, 625);
+            this.Margin = new System.Windows.Forms.Padding(6);
             this.Name = "Form1";
+            this.Text = "Form1";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_Closing);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -223,8 +301,6 @@ namespace SpreadsheetGUI
         private System.Windows.Forms.ToolStripMenuItem CloseMenuItem;
         private System.Windows.Forms.ToolStripMenuItem SettingsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem option1MenuItem;
-        private System.Windows.Forms.ToolStripMenuItem option2MenuItem;
         private System.Windows.Forms.Panel LowerContentsPanel;
         private System.Windows.Forms.TextBox ValueTextBox;
         private System.Windows.Forms.TextBox ContentsTextBox;
@@ -232,6 +308,18 @@ namespace SpreadsheetGUI
         private OpenFileDialog openFileDialog1;
         private ToolStripMenuItem SaveMenuItem;
         private SaveFileDialog saveFileDialog1;
+        private ToolStripMenuItem PrintMenuItem;
+        private PrintDialog printDialog1;
+        private System.Drawing.Printing.PrintDocument printDocument1;
+        private ColorDialog colorDialog1;
+        private ToolStripMenuItem howToChangeContentsOfCellToolStripMenuItem;
+        private ToolStripMenuItem howToSaveFileToolStripMenuItem;
+        private ToolStripMenuItem howToCreateNewSpreadsheetToolStripMenuItem;
+        private ToolStripMenuItem howToOpenAPreexisitngSpreadsheetToolStripMenuItem;
+        private ToolStripMenuItem howToCloseProgramToolStripMenuItem;
+        private ToolStripMenuItem howToEnterAFormulaIntoACellToolStripMenuItem;
+        private ToolStripMenuItem changeGridColorToolStripMenuItem;
+        private ToolStripMenuItem howToChangeTheColorOfTheGridLinesToolStripMenuItem;
     }
 }
 
